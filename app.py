@@ -50,13 +50,12 @@ def add_history(username, total_img, blur_skip):
     c.execute('INSERT INTO historytable VALUES (?,?,?,?)', (username, total_img, blur_skip, now))
     conn.commit()
 
-# ฟังก์ชันส่งแจ้งเตือนผ่าน Telegram
 def send_telegram_notify(bot_token, chat_id, message):
     if not bot_token or not chat_id: return
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     data = {"chat_id": chat_id, "text": message}
     try:
-        requests.post(url, data=data)
+        requests.post(url, data=data, timeout=5)
     except Exception:
         pass
 
@@ -140,57 +139,13 @@ header[data-testid="stHeader"] { background-color: transparent !important; borde
 .stat-pill .sp-label { font-family: var(--font-ui); font-size: 11px; font-weight: 700; color: var(--text-2); letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 8px; }
 .stat-pill .sp-val { font-size: 28px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; }
 
-/* ── BUTTONS ── */
+/* ── BUTTONS & OTHERS ── */
 .stButton > button { font-family: var(--font-ui) !important; font-size: 14px !important; font-weight: 700 !important; border-radius: 8px !important; border: 1px solid var(--border-hi) !important; background: var(--bg-surface) !important; color: var(--text-1) !important; transition: all 0.2s ease !important; padding: 10px 24px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; }
 .stButton > button:hover { border-color: var(--accent) !important; background: var(--bg-raised) !important; color: var(--accent) !important; }
 .stDownloadButton > button { font-family: var(--font-ui) !important; font-weight: 800 !important; font-size: 14px !important; border-radius: 8px !important; background: var(--accent) !important; color: white !important; border: none !important; padding: 12px 24px !important; box-shadow: 0 4px 6px rgba(255,107,0,0.2) !important; }
 .stDownloadButton > button:hover { opacity: 0.9 !important; transform: translateY(-1px) !important; }
-
-/* ── INPUTS & CHECKBOXES ── */
-.stTextInput > label, .stMultiselect > label, .stSlider > label, .stFileUploader > label { font-family: var(--font-ui) !important; font-size: 12px !important; font-weight: 700 !important; color: var(--text-1) !important; margin-bottom: 8px !important; }
-.stCheckbox > label span { font-weight: 600 !important; color: var(--text-1) !important; }
-.stTextInput > div > div > input { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; color: var(--text-1) !important; font-size: 14px !important; padding: 12px 16px !important; transition: all 0.2s !important; }
-.stTextInput > div > div > input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important; }
-.stTextInput > div > div > input::placeholder { color: var(--text-3) !important; }
-[data-baseweb="select"] > div { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; transition: all 0.2s !important; }
-[data-baseweb="select"] > div:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important; }
-[data-baseweb="tag"] { background: var(--accent-dim) !important; border: none !important; border-radius: 6px !important; padding: 4px 8px !important; }
-[data-baseweb="tag"] span { color: var(--accent) !important; font-size: 12px !important; font-weight: 700 !important; }
-
-/* ── EXPANDER ── */
-[data-testid="stExpander"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: var(--r-lg) !important; margin-bottom: 24px !important; overflow: hidden !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02) !important; }
-[data-testid="stExpander"] summary { font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; color: var(--text-1) !important; padding: 16px 24px !important; background: var(--bg-raised) !important; border-bottom: 1px solid var(--border) !important; }
-[data-testid="stExpander"] summary:hover { background: var(--bg-hover) !important; }
-[data-testid="stExpander"] > div > div { padding: 24px !important; }
-
-/* ── TABS & PROGRESS ── */
-.stTabs [data-baseweb="tab-list"] { background: transparent !important; border-bottom: 1px solid var(--border) !important; gap: 16px !important; }
-.stTabs [data-baseweb="tab"] { background: transparent !important; color: var(--text-3) !important; border: none !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; padding: 12px 4px !important; border-radius: 0 !important; transition: color 0.2s; }
-.stTabs [data-baseweb="tab"]:hover { color: var(--text-1) !important; }
-.stTabs [aria-selected="true"] { color: var(--accent) !important; border-bottom: 3px solid var(--accent) !important; font-weight: 800 !important; }
-.stTabs [data-baseweb="tab-panel"] { padding: 32px 0 0 !important; }
-.stProgress > div > div { background: var(--border) !important; border-radius: 4px !important; height: 6px !important; }
-.stProgress > div > div > div { background: var(--accent) !important; height: 6px !important; border-radius: 4px !important; }
-
-/* ── ALERTS ── */
-[data-testid="stAlert"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 14px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; }
-[data-testid="stAlert"][data-type="success"] { border-left: 4px solid var(--green) !important; }
-[data-testid="stAlert"][data-type="error"]   { border-left: 4px solid var(--red) !important; }
-hr { border: none !important; border-top: 1px solid var(--border) !important; margin: 32px 0 !important; }
-
-/* ── FILE UPLOADER ── */
-[data-testid="stFileUploaderDropzone"] { background: var(--bg-surface) !important; border: 2px dashed var(--border-hi) !important; border-radius: var(--r-lg) !important; padding: 40px 24px !important; transition: all 0.2s ease !important; }
-[data-testid="stFileUploaderDropzone"]:hover { border-color: var(--accent) !important; background: var(--accent-dim) !important; }
-[data-testid="stFileUploaderDropzone"] button { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; color: var(--text-1) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; padding: 8px 16px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; }
-
-/* ── VIDEO & IMAGE ── */
 video { border-radius: 12px !important; border: 1px solid var(--border) !important; width: 100% !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
-[data-testid="stImage"] img { border-radius: 12px !important; border: 1px solid var(--border) !important; width: 100% !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
-
-/* ── TYPOGRAPHY ── */
-.stMarkdown p { color: var(--text-1) !important; font-size: 15px !important; font-family: var(--font-ui) !important; font-weight: 500 !important; line-height: 1.6 !important; }
-.main .block-container { padding: 0 2rem 2rem !important; max-width: 1200px; }
-.status-text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-2); letter-spacing: 0.5px; padding: 12px 0; }
+[data-testid="stImage"] img { border-radius: 12px !important; border: 1px solid var(--border) !important; width: 100% !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;}
 </style>
 """
 
@@ -213,7 +168,6 @@ def show_auth_page():
         </div>
         """, unsafe_allow_html=True)
 
-        # ── แสดง success message + default ไป Login tab หลังสมัครเสร็จ ──
         if st.session_state.get('just_registered'):
             tab1, tab2 = st.tabs(["LOGIN", "REGISTER"])
             with tab1:
@@ -233,12 +187,9 @@ def show_auth_page():
                         st.warning("Please fill in all fields")
             with tab2:
                 st.info("Registration complete. Switch to LOGIN tab to continue.")
-            return  # หยุดไม่ render ส่วนล่างซ้ำ
+            return
 
-        # ── Normal Auth ──
         tab1, tab2 = st.tabs(["LOGIN", "REGISTER"])
-
-        # ── LOGIN ──
         with tab1:
             login_user_input = st.text_input("Username", key="login_user", placeholder="your username")
             login_pass_input = st.text_input("Password", type="password", key="login_pass", placeholder="••••••••")
@@ -253,7 +204,6 @@ def show_auth_page():
                 else:
                     st.warning("Please fill in all fields")
 
-        # ── REGISTER ──
         with tab2:
             new_user = st.text_input("New Username", key="reg_user", placeholder="choose a username")
             new_pass = st.text_input("New Password", type="password", key="reg_pass", placeholder="••••••••")
@@ -287,7 +237,6 @@ def show_auth_page():
                     is_strong = True
 
             if st.button("CREATE ACCOUNT", use_container_width=True, key="btn_register"):
-                # ── Rate Limiting: 3 ครั้ง / 60 วินาที ──
                 now     = datetime.datetime.now()
                 elapsed = (now - st.session_state['reg_last_time']).total_seconds()
                 if elapsed > 60:
@@ -308,11 +257,8 @@ def show_auth_page():
                         else:
                             add_userdata(new_user, new_pass)
                             st.session_state['reg_attempts'] += 1
-                            # ── ล้างค่า input fields ──
                             for k in ['reg_user', 'reg_pass']:
-                                if k in st.session_state:
-                                    del st.session_state[k]
-                            # ── Redirect ไป Login tab ──
+                                if k in st.session_state: del st.session_state[k]
                             st.session_state['just_registered'] = True
                             st.rerun()
                 else:
@@ -356,29 +302,10 @@ def show_main_app():
         default_index=1,
         orientation="horizontal",
         styles={
-            "container": {
-                "background-color": "var(--bg-surface)",
-                "border": "1px solid var(--border)",
-                "border-radius": "12px",
-                "padding": "5px",
-                "box-shadow": "0 4px 6px -1px rgba(0,0,0,0.02)",
-                "margin-bottom": "30px"
-            },
+            "container": { "background-color": "var(--bg-surface)", "border": "1px solid var(--border)", "border-radius": "12px", "padding": "5px", "box-shadow": "0 4px 6px -1px rgba(0,0,0,0.02)", "margin-bottom": "30px" },
             "icon": {"color": "var(--text-3)", "font-size": "16px"},
-            "nav-link": {
-                "font-size": "14px",
-                "font-weight": "700",
-                "color": "var(--text-2)",
-                "font-family": "var(--font-ui)",
-                "border-radius": "8px",
-                "padding": "10px",
-                "margin": "0 4px"
-            },
-            "nav-link-selected": {
-                "background-color": "var(--accent-dim)",
-                "color": "var(--accent)",
-                "border": "1px solid rgba(255,107,0,0.2)"
-            },
+            "nav-link": { "font-size": "14px", "font-weight": "700", "color": "var(--text-2)", "font-family": "var(--font-ui)", "border-radius": "8px", "padding": "10px", "margin": "0 4px" },
+            "nav-link-selected": { "background-color": "var(--accent-dim)", "color": "var(--accent)", "border": "1px solid rgba(255,107,0,0.2)" },
         }
     )
 
@@ -395,21 +322,45 @@ def show_main_app():
         <div class="page-header">
             <div class="eyebrow">MODULE / AI ENGINE</div>
             <h1>Dataset Generation</h1>
-            <div class="sub">Extract, label, filter & augment training data from video</div>
+            <div class="sub">สกัดข้อมูลภาพ คัดกรองคุณภาพ และเพิ่มจำนวนข้อมูล (Augmentation) อัตโนมัติด้วย AI</div>
         </div>
         """, unsafe_allow_html=True)
 
+        # 📌 1. ระบบโหลด Custom Model
+        st.markdown('<div class="section-label">Neural Network Override</div>', unsafe_allow_html=True)
+        custom_model_file = st.file_uploader("🧠 อัปโหลดไฟล์โมเดล .pt ที่เทรนเอง (ปล่อยว่างเพื่อใช้ YOLOv8n มาตรฐาน)", type=['pt'], help="รองรับไฟล์ Weights จาก YOLOv8")
+        
         @st.cache_resource
-        def load_model():
+        def load_default_model():
             return YOLO('yolov8n.pt')
-        model = load_model()
+        
+        # จัดการโหลด Model
+        try:
+            if custom_model_file:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pt') as tmp_model:
+                    tmp_model.write(custom_model_file.read())
+                    model = YOLO(tmp_model.name)
+                    st.success(f"✅ โหลดโมเดลที่กำหนดเองสำเร็จ: {custom_model_file.name}")
+            else:
+                model = load_default_model()
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการโหลดโมเดล: {str(e)}")
+            model = load_default_model()
+            
         available_classes = model.names
 
+        # 📌 2. System Configuration
         with st.expander("⚙  NEURAL NETWORK & SYSTEM CONFIGURATION", expanded=True):
             col1, col2, col3, col4 = st.columns(4, gap="medium")
             with col1:
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">AI TARGETS</p>', unsafe_allow_html=True)
-                selected_class_names = st.multiselect("Detection Targets", list(available_classes.values()), default=["person", "car"], label_visibility="collapsed")
+                # ดึงคลาสเริ่มต้น (ถ้ามีคลาส person/car ให้เลือกไว้ก่อน ถ้าไม่มีให้เลือกคลาสแรก)
+                default_classes = []
+                if "person" in available_classes.values(): default_classes.append("person")
+                elif len(available_classes) > 0: default_classes.append(available_classes[0])
+                if "car" in available_classes.values(): default_classes.append("car")
+                
+                selected_class_names = st.multiselect("Detection Targets", list(available_classes.values()), default=default_classes, label_visibility="collapsed")
                 selected_class_ids   = [k for k, v in available_classes.items() if v in selected_class_names]
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-top:10px;margin-bottom:6px;text-transform:uppercase;">CONFIDENCE (%)</p>', unsafe_allow_html=True)
                 conf_threshold = st.slider("Min Confidence", 10, 90, 25, 5, label_visibility="collapsed") / 100.0
@@ -431,11 +382,9 @@ def show_main_app():
 
             # ── Telegram Notification ──
             st.markdown('<hr style="margin:16px 0;">', unsafe_allow_html=True)
-
             col_tele_head, col_tele_toggle = st.columns([3, 1])
             with col_tele_head:
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:2px;text-transform:uppercase;">📱 TELEGRAM NOTIFICATION (OPTIONAL)</p>', unsafe_allow_html=True)
-                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;color:var(--text-3);margin-bottom:6px;">รับแจ้งเตือนผ่าน Telegram Bot เมื่อประมวลผลเสร็จสิ้น</p>', unsafe_allow_html=True)
             with col_tele_toggle:
                 tele_enabled = st.toggle("Enable Notifications", value=True, key="tele_toggle")
 
@@ -443,49 +392,24 @@ def show_main_app():
                 col_t1, col_t2, col_t3 = st.columns([2, 1.5, 1])
                 with col_t1:
                     st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">🔑 Bot Token</p>', unsafe_allow_html=True)
-                    # 📌 แก้ไขค่า value="" ให้เริ่มต้นแบบว่างเปล่าทุกครั้งที่ล็อกอิน
-                    tele_token = st.text_input(
-                        "Bot Token",
-                        value="", 
-                        type="password",
-                        placeholder="e.g. 123456789:AAFxxxxxxxxxxxxxxxxxxxxxxx",
-                        label_visibility="collapsed"
-                    )
+                    tele_token = st.text_input("Bot Token", value="", type="password", placeholder="e.g. 123456789:AAF...", label_visibility="collapsed")
                 with col_t2:
                     st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">💬 Chat ID</p>', unsafe_allow_html=True)
-                    # 📌 แก้ไขค่า value="" ให้เริ่มต้นแบบว่างเปล่าทุกครั้งที่ล็อกอิน
-                    tele_chat_id = st.text_input(
-                        "Chat ID",
-                        value="",
-                        placeholder="e.g. 849818556",
-                        label_visibility="collapsed"
-                    )
+                    tele_chat_id = st.text_input("Chat ID", value="", placeholder="e.g. 849818556", label_visibility="collapsed")
                 with col_t3:
                     st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">🧪 TEST</p>', unsafe_allow_html=True)
                     if st.button("Send Test", use_container_width=True, key="btn_test_tele"):
                         if tele_token and tele_chat_id:
                             try:
-                                test_msg = (
-                                    f"✅ AI-Dataset Pro\n"
-                                    f"การเชื่อมต่อสำเร็จ!\n"
-                                    f"👤 ผู้ใช้งาน: {st.session_state['username']}\n"
-                                    f"🕐 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-                                )
-                                url  = f"https://api.telegram.org/bot{tele_token}/sendMessage"
-                                resp = requests.post(url, data={"chat_id": tele_chat_id, "text": test_msg}, timeout=5)
-                                if resp.status_code == 200:
-                                    st.success("✅ ส่งสำเร็จ!")
-                                else:
-                                    st.error(f"❌ Error {resp.status_code}")
-                            except Exception as e:
-                                st.error(f"❌ {str(e)}")
-                        else:
-                            st.warning("กรุณากรอก Token และ Chat ID")
+                                requests.post(f"https://api.telegram.org/bot{tele_token}/sendMessage", data={"chat_id": tele_chat_id, "text": f"✅ AI-Dataset Pro\nการเชื่อมต่อสำเร็จ!"}, timeout=5)
+                                st.success("✅ ส่งสำเร็จ!")
+                            except: st.error("❌ ขัดข้อง")
+                        else: st.warning("กรุณากรอกข้อมูล")
             else:
-                tele_token   = ""
-                tele_chat_id = ""
-                st.markdown('<p style="font-family:var(--font-ui);font-size:12px;color:var(--text-3);font-weight:500;padding:8px 0;">🔕 Notification ถูกปิดอยู่ — จะไม่มีการส่งแจ้งเตือนเมื่อประมวลผลเสร็จ</p>', unsafe_allow_html=True)
+                tele_token, tele_chat_id = "", ""
+                st.markdown('<p style="font-family:var(--font-ui);font-size:12px;color:var(--text-3);font-weight:500;padding:8px 0;">🔕 Notification ถูกปิดอยู่</p>', unsafe_allow_html=True)
 
+        # 📌 3. Media Source & Video Processing
         st.markdown('<div class="section-label">Media Source</div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Drop video file here", type=['mp4', 'avi', 'mov'], label_visibility="collapsed")
 
@@ -509,8 +433,7 @@ def show_main_app():
             if st.button("▶  EXECUTE AI PROCESSING", use_container_width=True):
                 output_folder = "dataset_workspace"
                 if os.path.exists(output_folder): shutil.rmtree(output_folder)
-                for f in ['images/train', 'images/val', 'labels/train', 'labels/val']:
-                    os.makedirs(os.path.join(output_folder, f))
+                for f in ['images/train', 'images/val', 'labels/train', 'labels/val']: os.makedirs(os.path.join(output_folder, f))
 
                 cap          = cv2.VideoCapture(video_path)
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -530,8 +453,8 @@ def show_main_app():
                         for box in boxes:
                             cid   = int(box.cls)
                             cname = available_classes[cid]
-                            class_counts[cname] += 1
-                            new_id = selected_class_names.index(cname) if selected_class_names else cid
+                            class_counts[cname] = class_counts.get(cname, 0) + 1
+                            new_id = selected_class_names.index(cname) if selected_class_names and cname in selected_class_names else cid
                             x, y, w, h = box.xywhn[0]
                             if is_flipped: x = 1.0 - x
                             lf.write(f"{new_id} {x:.6f} {y:.6f} {w:.6f} {h:.6f}\n")
@@ -546,16 +469,9 @@ def show_main_app():
                             score = cv2.Laplacian(gray, cv2.CV_64F).var()
                             if score < blur_threshold:
                                 skipped_blur_count += 1
-                                blur_warning.markdown(
-                                    f'<div style="color:var(--red);font-size:13px;font-family:var(--font-ui);font-weight:700;'
-                                    f'padding:8px;border:1px solid var(--red);border-radius:8px;background:var(--bg-surface);">'
-                                    f'⚠️ BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>',
-                                    unsafe_allow_html=True
-                                )
-                                frame_count += 1
-                                continue
-                            else:
-                                blur_warning.empty()
+                                blur_warning.markdown(f'<div style="color:var(--red);font-size:13px;font-weight:700;padding:8px;border:1px solid var(--red);border-radius:8px;background:var(--bg-surface);">⚠️ BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>', unsafe_allow_html=True)
+                                frame_count += 1; continue
+                            else: blur_warning.empty()
 
                         results = model(frame, classes=selected_class_ids if selected_class_ids else None, conf=conf_threshold, verbose=False)
                         boxes   = results[0].boxes
@@ -569,13 +485,10 @@ def show_main_app():
 
                     frame_count += 1
                     progress_bar.progress(min(frame_count / total_frames, 1.0))
-                    status_text.markdown(
-                        f'<div class="status-text">PROCESSING  {frame_count} / {total_frames}  FRAMES | EXTRACTED: {len(dataset_records)}</div>',
-                        unsafe_allow_html=True
-                    )
-                cap.release()
-                blur_warning.empty()
+                    status_text.markdown(f'<div class="status-text">PROCESSING  {frame_count} / {total_frames}  FRAMES | EXTRACTED: {len(dataset_records)}</div>', unsafe_allow_html=True)
+                cap.release(); blur_warning.empty()
 
+                # สร้าง data.yaml
                 classes_for_yaml = selected_class_names if selected_class_names else list(available_classes.values())
                 with open(os.path.join(output_folder, "data.yaml"), 'w', encoding='utf-8') as yf:
                     yf.write("train: images/train\nval: images/val\n\n")
@@ -584,18 +497,35 @@ def show_main_app():
 
                 add_history(st.session_state['username'], len(dataset_records), skipped_blur_count)
 
+                # ยิง Telegram
                 if tele_token and tele_chat_id:
-                    noti_msg = (
-                        f"✅ AI-Dataset Pro ประมวลผลเสร็จสิ้น!\n"
-                        f"👤 ผู้ใช้งาน: {st.session_state['username']}\n"
-                        f"📸 สกัดรูปภาพได้: {len(dataset_records)} รูป\n"
-                        f"❌ เตะภาพเบลอทิ้ง: {skipped_blur_count} รูป\n"
-                        f"📦 ไฟล์พร้อมดาวน์โหลดแล้วครับ!"
-                    )
+                    noti_msg = f"✅ AI-Dataset Pro ทำงานเสร็จสิ้น!\n👤 ผู้ใช้งาน: {st.session_state['username']}\n📸 สกัดรูปภาพได้: {len(dataset_records)} รูป\n❌ เตะภาพเบลอทิ้ง: {skipped_blur_count} รูป"
                     send_telegram_notify(tele_token, tele_chat_id, noti_msg)
 
-                train_c      = sum(1 for r in dataset_records if r['subset'] == 'train')
-                val_c        = len(dataset_records) - train_c
+                # 📌 4. Advanced Data Analytics (ฟีเจอร์ใหม่)
+                if len(dataset_records) > 0:
+                    st.markdown('<hr style="margin:40px 0 20px;">', unsafe_allow_html=True)
+                    st.markdown('<div class="section-label" style="color:var(--accent);">🚀 Advanced Data Analytics</div>', unsafe_allow_html=True)
+                    
+                    col_an1, col_an2 = st.columns([1, 1], gap="large")
+                    with col_an1:
+                        st.markdown('<p class="col-header">📊 Class Distribution</p>', unsafe_allow_html=True)
+                        df_classes = pd.DataFrame(list(class_counts.items()), columns=['Class', 'Detected Boxes'])
+                        df_classes = df_classes[df_classes['Detected Boxes'] > 0]
+                        if not df_classes.empty:
+                            st.bar_chart(df_classes.set_index('Class'), color="#ff6b00")
+                        else:
+                            st.info("ไม่พบข้อมูลวัตถุที่จะนำมาวิเคราะห์")
+
+                    with col_an2:
+                        st.markdown('<p class="col-header">📁 Extracted Files Preview (Top 10)</p>', unsafe_allow_html=True)
+                        recent_files = pd.DataFrame(dataset_records).tail(10)
+                        recent_files.columns = ['Split', 'Filename']
+                        st.dataframe(recent_files, use_container_width=True, hide_index=True)
+
+                # แสดง Pill สถิติรวม
+                train_c = sum(1 for r in dataset_records if r['subset'] == 'train')
+                val_c   = len(dataset_records) - train_c
                 total_labels = sum(class_counts.values())
 
                 st.markdown(f"""
@@ -609,18 +539,17 @@ def show_main_app():
                 """, unsafe_allow_html=True)
 
                 st.divider()
-                st.success("Dataset generation & QC complete")
+                st.success("🎉 Dataset generation & Data Analysis complete!")
 
+                # ซิปไฟล์และให้ดาวน์โหลด
                 zip_filename = "ai_dataset.zip"
                 with zipfile.ZipFile(zip_filename, 'w') as zipf:
                     for root, dirs, files in os.walk(output_folder):
-                        for file in files:
-                            zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), output_folder))
+                        for file in files: zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), output_folder))
                 with open(zip_filename, "rb") as fp:
                     st.download_button("⬇  DOWNLOAD DATASET (PRO)", fp, "ai_dataset_pro.zip", "application/zip", use_container_width=True)
-                os.remove(video_path)
-                shutil.rmtree(output_folder)
-                os.remove(zip_filename)
+                
+                os.remove(video_path); shutil.rmtree(output_folder); os.remove(zip_filename)
 
     # ══════════════════════════════════════════
     # DASHBOARD PAGE
