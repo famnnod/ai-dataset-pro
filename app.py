@@ -15,17 +15,17 @@ from ultralytics import YOLO
 from streamlit_option_menu import option_menu
 
 # ==========================================
-# Page Config
+# Page Config (บังคับ Sidebar ให้ซ่อนตั้งแต่เริ่ม)
 # ==========================================
 st.set_page_config(
     page_title="AI-Dataset Pro",
     page_icon="⬡",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # ==========================================
-# Database
+# Database System
 # ==========================================
 conn = sqlite3.connect('users.db', check_same_thread=False)
 c = conn.cursor()
@@ -85,21 +85,18 @@ THEME_CSS = """
 
 html, body, .stApp { background-color: var(--bg-deep) !important; color: var(--text-1) !important; font-family: var(--font-ui); }
 
-/* ── 📌 ซ่อน Sidebar และปุ่มเปิด/ปิดแบบถาวร ── */
-[data-testid="stSidebar"] { display: none !important; }
-[data-testid="collapsedControl"] { display: none !important; }
+/* ── ซ่อน Sidebar และเครื่องมือ Streamlit ── */
+[data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
 header[data-testid="stHeader"] { background-color: transparent !important; border-bottom: none !important; box-shadow: none !important; }
-
-/* ── HIDE STREAMLIT DEFAULT CHROME ── */
 [data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
-.appview-container { background-color: var(--bg-deep) !important; } .main > div { padding-top: 1.5rem !important; }
+.appview-container { background-color: var(--bg-deep) !important; } 
+.main > div { padding-top: 1.5rem !important; }
 ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
 
 /* ── TOP HEADER (Brand & User) ── */
 .top-brand { display: flex; align-items: center; gap: 12px; }
 .top-brand .hex { width: 36px; height: 36px; background: var(--accent-dim); border: 1px solid rgba(255,107,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--accent); font-weight: 800; }
 .top-brand h2 { font-size: 20px !important; font-weight: 800 !important; color: var(--text-1) !important; margin: 0 !important; letter-spacing: -0.5px; }
-
 .top-user { display: flex; align-items: center; gap: 12px; justify-content: flex-end; padding: 4px 0;}
 .top-user .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; box-shadow: 0 2px 4px rgba(255,107,0,0.3); }
 .top-user .uname { font-size: 14px; font-weight: 800; color: var(--text-1) !important; line-height: 1.2; text-transform: uppercase;}
@@ -141,13 +138,6 @@ header[data-testid="stHeader"] { background-color: transparent !important; borde
 [data-baseweb="select"] > div:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important;}
 [data-baseweb="tag"] { background: var(--accent-dim) !important; border: none !important; border-radius: 6px !important; padding: 4px 8px !important; }
 [data-baseweb="tag"] span { color: var(--accent) !important; font-size: 12px !important; font-weight: 700 !important; }
-[data-baseweb="menu"] { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; }
-[data-baseweb="option"] { background: transparent !important; color: var(--text-1) !important; font-size: 14px !important; font-weight: 500 !important;}
-[data-baseweb="option"]:hover { background: var(--bg-raised) !important; color: var(--accent) !important;}
-[data-baseweb="slider"] { padding: 10px 0 !important; }
-[data-baseweb="track-background"] { background: var(--border) !important; height: 4px !important; border-radius: 2px !important; }
-[data-baseweb="track-fill"] { background: var(--accent) !important; height: 4px !important; }
-[data-baseweb="thumb"] { background: white !important; border: 3px solid var(--accent) !important; width: 20px !important; height: 20px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; }
 
 /* ── EXPANDER ── */
 [data-testid="stExpander"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: var(--r-lg) !important; margin-bottom: 24px !important; overflow: hidden !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02) !important; }
@@ -188,12 +178,12 @@ def show_auth_page():
     _, col, _ = st.columns([1, 1.4, 1])
     with col:
         st.markdown("""
-        <div style="text-align:center;padding:32px 0 28px;border-bottom:1px solid var(--border);margin-bottom:28px;">
-            <div style="width:48px;height:48px;background:var(--accent-dim);border:1px solid rgba(59,158,255,0.4);
+        <div style="text-align:center;padding:32px 0 28px;border-bottom:2px solid var(--border);margin-bottom:28px;">
+            <div style="width:48px;height:48px;background:var(--accent-dim);border:1px solid rgba(255,107,0,0.3);
                         border-radius:12px;display:flex;align-items:center;justify-content:center;
-                        font-size:22px;margin:0 auto 16px;">⬡</div>
-            <h1 style="font-size:22px;font-weight:800;color:var(--text-1);margin:0 0 4px;">AI-Dataset Pro</h1>
-            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:2.5px;">
+                        font-size:24px;margin:0 auto 16px;color:var(--accent);font-weight:800;">⬡</div>
+            <h1 style="font-size:26px;font-weight:800;color:var(--text-1);margin:0 0 4px;letter-spacing:-0.5px;">AI-Dataset Pro</h1>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-3);letter-spacing:2.5px;font-weight:600;">
                 COMPUTER VISION PLATFORM
             </div>
         </div>
@@ -231,24 +221,24 @@ def show_auth_page():
                 st.markdown(f"""
                 <div style="margin-top:-10px;margin-bottom:15px;">
                     <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);
-                                font-size:10px;color:var(--text-2);margin-bottom:5px;">
+                                font-size:10px;color:var(--text-2);margin-bottom:5px;font-weight:600;">
                         <span>SECURITY LEVEL</span>
-                        <span style="color:{clr};font-weight:bold;">{lbl}</span>
+                        <span style="color:{clr};font-weight:800;">{lbl}</span>
                     </div>
-                    <div style="width:100%;height:3px;background:var(--bg-raised);border-radius:2px;">
+                    <div style="width:100%;height:4px;background:var(--border);border-radius:2px;">
                         <div style="width:{(score/5)*100}%;height:100%;background:{clr};border-radius:2px;transition:all 0.3s;"></div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 if score < 5:
-                    st.markdown('<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);margin-bottom:12px;">Require: 8+ chars, A-Z, a-z, 0-9, special char</div>', unsafe_allow_html=True)
+                    st.markdown('<div style="font-family:var(--font-ui);font-size:12px;color:var(--text-3);margin-bottom:12px;font-weight:500;">Require: 8+ chars, A-Z, a-z, 0-9, special char</div>', unsafe_allow_html=True)
                 else:
                     is_strong = True
 
             if st.button("CREATE ACCOUNT", use_container_width=True, key="btn_register"):
                 if new_user and new_pass:
                     if not is_strong:
-                        st.error("Please use a stronger password")
+                        st.error("Please use a stronger password (STRONG level required)")
                     else:
                         c.execute('SELECT * FROM userstable WHERE username=?', (new_user,))
                         if c.fetchone():
@@ -265,9 +255,8 @@ def show_auth_page():
 def show_main_app():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
 
-    # 📌 1. โลโก้ และ User Profile (ไว้ด้านบนสุดแทน Sidebar)
+    # 📌 1. Top Header (Logo & User Profile)
     init = st.session_state['username'][0].upper() if st.session_state['username'] else "?"
-    
     col1, col2 = st.columns([1, 1])
     with col1:
         st.markdown(f"""
@@ -286,16 +275,17 @@ def show_main_app():
             <div class="avatar">{init}</div>
         </div>
         """, unsafe_allow_html=True)
+    st.write("") 
 
-    st.write("") # เว้นบรรทัดนิดนึงให้ดูโปร่งๆ
-
-    # 📌 2. เมนูแนวนอน (Horizontal Menu)
+    # 📌 2. Top Navigation Menu แนวนอน
+    is_admin = (st.session_state['username'].lower() == 'admin')
+    
     selected_menu = option_menu(
         menu_title=None,
         options=["Dashboard", "AI Engine", "Logout"],
         icons=["grid-1x2", "cpu", "box-arrow-right"],
         default_index=1,
-        orientation="horizontal", # 📌 บังคับเป็นแนวนอน
+        orientation="horizontal",
         styles={
             "container": {
                 "background-color": "var(--bg-surface)", 
@@ -329,8 +319,13 @@ def show_main_app():
 
     # ── AI ENGINE PAGE ────────────────────────
     if selected_menu == "AI Engine":
-        st.markdown('<div class="page-header"><div class="eyebrow">MODULE / AI ENGINE</div><h1>Dataset Generation</h1><div class="sub">Extract, label, filter & augment training data from video</div></div>', unsafe_allow_html=True)
-        # ... (โค้ดส่วน AI Engine ดั้งเดิมของคุณ อยู่ตรงนี้เหมือนเดิมครับ)
+        st.markdown("""
+        <div class="page-header">
+            <div class="eyebrow">MODULE / AI ENGINE</div>
+            <h1>Dataset Generation</h1>
+            <div class="sub">Extract, label, filter & augment training data from video</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         @st.cache_resource
         def load_model():
@@ -341,22 +336,22 @@ def show_main_app():
         with st.expander("⚙  NEURAL NETWORK & SYSTEM CONFIGURATION"):
             col1, col2, col3, col4 = st.columns(4, gap="medium")
             with col1:
-                st.markdown('<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;">AI TARGETS</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">AI TARGETS</p>', unsafe_allow_html=True)
                 selected_class_names = st.multiselect("Detection Targets", list(available_classes.values()), default=["person", "car"], label_visibility="collapsed")
                 selected_class_ids = [k for k, v in available_classes.items() if v in selected_class_names]
-                st.markdown('<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:1px;margin-top:10px;margin-bottom:6px;">CONFIDENCE (%)</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-top:10px;margin-bottom:6px;text-transform:uppercase;">CONFIDENCE (%)</p>', unsafe_allow_html=True)
                 conf_threshold = st.slider("Min Confidence", 10, 90, 25, 5, label_visibility="collapsed") / 100.0
             with col2:
-                st.markdown('<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;">DATASET SPLIT</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">DATASET SPLIT</p>', unsafe_allow_html=True)
                 split_ratio = st.slider("Train Split (%)", 50, 95, 80)
-                frame_skip  = st.slider("Frame Skip Interval", 1, 30, 10)
+                frame_skip  = st.slider("Frame Skip Interval", 1, 30, 5)
             with col3:
-                st.markdown('<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;">DATA AUGMENTATION</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">DATA AUGMENTATION</p>', unsafe_allow_html=True)
                 do_flip   = st.checkbox("Horizontal Flip")
                 do_bright = st.checkbox("Brightness Boost")
                 do_noise  = st.checkbox("Add Noise")
             with col4:
-                st.markdown('<p style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;">QUALITY CONTROL</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">QUALITY CONTROL</p>', unsafe_allow_html=True)
                 do_blur_filter = st.checkbox("Blur Filter", value=True)
                 blur_threshold = st.slider("Blur Threshold", 20, 200, 60)
 
@@ -420,7 +415,7 @@ def show_main_app():
                             score = cv2.Laplacian(gray, cv2.CV_64F).var()
                             if score < blur_threshold:
                                 skipped_blur_count += 1
-                                blur_warning.markdown(f'<div style="color:var(--red);font-size:12px;font-family:var(--font-mono);">BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>', unsafe_allow_html=True)
+                                blur_warning.markdown(f'<div style="color:var(--red);font-size:13px;font-family:var(--font-ui);font-weight:700;">BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>', unsafe_allow_html=True)
                                 frame_count += 1
                                 continue
                             else:
@@ -458,9 +453,9 @@ def show_main_app():
                 <div class="stat-row">
                     <div class="stat-pill"><span class="sp-label" style="color:var(--accent);">Good Images</span><span class="sp-val">{len(dataset_records)}</span></div>
                     <div class="stat-pill"><span class="sp-label" style="color:var(--red);">Blurry Skipped</span><span class="sp-val">{skipped_blur_count}</span></div>
-                    <div class="stat-pill"><span class="sp-label">Train</span><span class="sp-val">{train_c}</span></div>
-                    <div class="stat-pill"><span class="sp-label">Val</span><span class="sp-val">{val_c}</span></div>
-                    <div class="stat-pill"><span class="sp-label">Labels</span><span class="sp-val">{total_labels}</span></div>
+                    <div class="stat-pill"><span class="sp-label">Train Data</span><span class="sp-val">{train_c}</span></div>
+                    <div class="stat-pill"><span class="sp-label">Val Data</span><span class="sp-val">{val_c}</span></div>
+                    <div class="stat-pill"><span class="sp-label">Total Labels</span><span class="sp-val">{total_labels}</span></div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -473,22 +468,31 @@ def show_main_app():
                         for file in files:
                             zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), output_folder))
                 with open(zip_filename, "rb") as fp:
-                    st.download_button("⬇  DOWNLOAD DATASET", fp, "ai_dataset_pro.zip", "application/zip", use_container_width=True)
+                    st.download_button("⬇  DOWNLOAD DATASET (PRO)", fp, "ai_dataset_pro.zip", "application/zip", use_container_width=True)
                 os.remove(video_path); shutil.rmtree(output_folder); os.remove(zip_filename)
 
-    # ── DASHBOARD ──
+    # ── DASHBOARD PAGE (Personalized) ────────────────────────
     elif selected_menu == "Dashboard":
-        st.markdown("""
+        title_text = "System Admin Dashboard" if is_admin else "Personal Dashboard"
+        sub_text = "Real-time global analytics & user activity" if is_admin else "Your personal AI generation statistics"
+        
+        st.markdown(f"""
         <div class="page-header">
             <div class="eyebrow">MODULE / OVERVIEW</div>
-            <h1>System Dashboard</h1>
-            <div class="sub">Real-time analytics & user activity</div>
+            <h1>{title_text}</h1>
+            <div class="sub">{sub_text}</div>
         </div>
         """, unsafe_allow_html=True)
 
-        c.execute('SELECT COUNT(*) FROM userstable')
-        total_users = c.fetchone()[0]
-        df_history  = pd.read_sql_query("SELECT * FROM historytable ORDER BY timestamp DESC", conn)
+        if is_admin:
+            c.execute('SELECT COUNT(*) FROM userstable')
+            total_users = c.fetchone()[0]
+            df_history  = pd.read_sql_query("SELECT * FROM historytable ORDER BY timestamp DESC", conn)
+        else:
+            total_users = 1
+            query = "SELECT * FROM historytable WHERE username=? ORDER BY timestamp DESC"
+            df_history = pd.read_sql_query(query, conn, params=(st.session_state['username'],))
+
         total_runs    = len(df_history)
         total_images  = int(df_history['total_img'].sum()) if not df_history.empty else 0
         total_skipped = int(df_history['blur_skip'].sum()) if not df_history.empty else 0
@@ -508,13 +512,13 @@ def show_main_app():
             if not df_history.empty:
                 chart_data = df_history[['timestamp', 'total_img']].copy()
                 chart_data['timestamp'] = pd.to_datetime(chart_data['timestamp']).dt.strftime('%H:%M')
-                st.bar_chart(chart_data.set_index('timestamp'), color="#3b9eff")
+                st.bar_chart(chart_data.set_index('timestamp'), color="#ff6b00")
             else:
                 st.markdown("""
                 <div style="background:var(--bg-surface);border:1px solid var(--border);
                             border-radius:var(--r-lg);padding:40px;text-align:center;">
-                    <div style="font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:2px;">NO DATA YET</div>
-                    <div style="font-size:13px;color:var(--text-2);margin-top:8px;">Run the AI Engine to see trends here</div>
+                    <div style="font-family:var(--font-ui);font-size:13px;font-weight:700;color:var(--text-3);letter-spacing:1px;">NO DATA YET</div>
+                    <div style="font-size:14px;color:var(--text-2);margin-top:8px;">Run the AI Engine to see your trends here</div>
                 </div>
                 """, unsafe_allow_html=True)
         with col2:
@@ -524,8 +528,7 @@ def show_main_app():
                 display_df.columns = ['User', 'Images', 'Time']
                 st.dataframe(display_df, use_container_width=True, hide_index=True)
             else:
-                st.markdown('<div style="font-family:var(--font-mono);font-size:12px;color:var(--text-3);">No recent activity</div>', unsafe_allow_html=True)
-
+                st.markdown('<div style="font-family:var(--font-ui);font-size:13px;color:var(--text-3);font-weight:500;">No recent activity</div>', unsafe_allow_html=True)
 
 # ── ROUTER ──
 if not st.session_state['logged_in']:
