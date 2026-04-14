@@ -55,359 +55,128 @@ if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
 if 'username' not in st.session_state: st.session_state['username'] = ""
 
 # ==========================================
-# Global CSS
+# Global CSS (Modern Clean & Orange Theme - Top Menu)
 # ==========================================
 THEME_CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg-deep:     #060a12;
-    --bg-surface:  #0d1422;
-    --bg-raised:   #121c30;
-    --bg-hover:    #182338;
-    --border:      #1e2e45;
-    --border-hi:   #2a4060;
-    --accent:      #3b9eff;
-    --accent-dim:  rgba(59,158,255,0.12);
-    --accent-glow: rgba(59,158,255,0.22);
-    --green:       #22d3a0;
-    --red:         #f05252;
-    --amber:       #f59e0b;
-    --text-1:      #e8f0fa;
-    --text-2:      #7a96b4;
-    --text-3:      #3d5570;
-    --font-ui:     'Syne', sans-serif;
+    --bg-deep:     #f8fafc; 
+    --bg-surface:  #ffffff; 
+    --bg-raised:   #f1f5f9; 
+    --bg-hover:    #e2e8f0;
+    --border:      #e2e8f0; 
+    --border-hi:   #cbd5e1;
+    --accent:      #ff6b00; 
+    --accent-dim:  rgba(255, 107, 0, 0.1); 
+    --accent-glow: rgba(255, 107, 0, 0.2);
+    --green:       #10b981; 
+    --red:         #ef4444; 
+    --amber:       #f59e0b; 
+    --text-1:      #000000; 
+    --text-2:      #111827; 
+    --text-3:      #374151; 
+    --font-ui:     'Inter', sans-serif;
     --font-mono:   'DM Mono', monospace;
     --r:           10px;
-    --r-lg:        14px;
+    --r-lg:        16px;
 }
 
-html, body, .stApp {
-    background-color: var(--bg-deep) !important;
-    color: var(--text-1);
-    font-family: var(--font-ui);
-}
+html, body, .stApp { background-color: var(--bg-deep) !important; color: var(--text-1) !important; font-family: var(--font-ui); }
+
+/* ── 📌 ซ่อน Sidebar และปุ่มเปิด/ปิดแบบถาวร ── */
+[data-testid="stSidebar"] { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
+header[data-testid="stHeader"] { background-color: transparent !important; border-bottom: none !important; box-shadow: none !important; }
 
 /* ── HIDE STREAMLIT DEFAULT CHROME ── */
-header[data-testid="stHeader"] {
-    background-color: var(--bg-deep) !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-}
-[data-testid="stToolbar"]    { display: none !important; }
-[data-testid="stDecoration"] { display: none !important; }
-#MainMenu                    { visibility: hidden !important; }
-footer                       { visibility: hidden !important; }
-.appview-container           { background-color: var(--bg-deep) !important; }
-.main > div                  { padding-top: 0.5rem !important; }
+[data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
+.appview-container { background-color: var(--bg-deep) !important; } .main > div { padding-top: 1.5rem !important; }
+::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
 
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar       { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+/* ── TOP HEADER (Brand & User) ── */
+.top-brand { display: flex; align-items: center; gap: 12px; }
+.top-brand .hex { width: 36px; height: 36px; background: var(--accent-dim); border: 1px solid rgba(255,107,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--accent); font-weight: 800; }
+.top-brand h2 { font-size: 20px !important; font-weight: 800 !important; color: var(--text-1) !important; margin: 0 !important; letter-spacing: -0.5px; }
 
-/* ── SIDEBAR ──
-   ใช้ padding บน outer เพื่อให้ inner card ดูลอย
-   ไม่ใช้ overflow:hidden บน inner เพราะจะตัด option_menu dropdown
-*/
-[data-testid="stSidebar"] {
-    background-color: var(--bg-deep) !important;
-    border-right: none !important;
-    padding: 12px 8px 12px 12px !important;
-}
-[data-testid="stSidebar"] > div:first-child {
-    background-color: var(--bg-surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 18px !important;
-    /* ไม่ใส่ overflow:hidden — ทำให้ menu items มองเห็นได้ทั้งหมด */
-}
-[data-testid="stSidebar"] > div { padding-top: 0 !important; }
-[data-testid="stSidebar"] * { font-family: var(--font-ui) !important; }
-
-/* ── SIDEBAR BRAND ── */
-.sidebar-brand {
-    padding: 20px 18px 16px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 6px;
-}
-.sidebar-brand .logo-mark {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
-}
-.sidebar-brand .hex {
-    width: 30px; height: 30px;
-    background: var(--accent-dim);
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; color: var(--accent); font-weight: 700;
-}
-.sidebar-brand h2 {
-    font-size: 14px !important; font-weight: 700 !important;
-    color: var(--text-1) !important; margin: 0 !important;
-}
-.sidebar-brand p {
-    font-family: var(--font-mono) !important; font-size: 9px !important;
-    color: var(--text-3) !important; letter-spacing: 2px; margin: 0 !important;
-}
-
-/* ── USER BADGE ── */
-.user-badge {
-    margin: 6px 12px 4px;
-    padding: 9px 12px;
-    background: var(--bg-raised);
-    border: 1px solid var(--border);
-    border-radius: var(--r);
-    display: flex; align-items: center; gap: 10px;
-}
-.user-badge .avatar {
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--accent-dim); border: 1px solid var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: var(--accent); flex-shrink: 0;
-}
-.user-badge .uname   { font-size: 12px; font-weight: 600; color: var(--text-1); }
-.user-badge .ustatus { font-size: 10px; color: var(--green); letter-spacing: 1px; }
-
-/* ── OPTION MENU ── */
-div[data-testid="stSidebar"] .nav-link {
-    font-size: 13px !important;
-    border-radius: 10px !important;
-    margin: 2px 8px !important;
-    color: var(--text-2) !important;
-    padding: 10px 14px !important;
-    transition: all 0.18s !important;
-}
-div[data-testid="stSidebar"] .nav-link:hover {
-    background: var(--bg-hover) !important;
-    color: var(--text-1) !important;
-}
-div[data-testid="stSidebar"] .nav-link-selected {
-    background: var(--accent-dim) !important;
-    color: var(--accent) !important;
-    border: 1px solid rgba(59,158,255,0.28) !important;
-    font-weight: 600 !important;
-}
-
-/* ── COLLAPSE BUTTON ── */
-[data-testid="collapsedControl"] {
-    background: var(--bg-raised) !important;
-    border: 1px solid var(--border-hi) !important;
-    border-radius: 8px !important;
-    color: var(--accent) !important;
-    margin: 12px !important;
-}
-[data-testid="collapsedControl"]:hover {
-    border-color: var(--accent) !important;
-    background: var(--accent-dim) !important;
-}
+.top-user { display: flex; align-items: center; gap: 12px; justify-content: flex-end; padding: 4px 0;}
+.top-user .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; box-shadow: 0 2px 4px rgba(255,107,0,0.3); }
+.top-user .uname { font-size: 14px; font-weight: 800; color: var(--text-1) !important; line-height: 1.2; text-transform: uppercase;}
+.top-user .ustatus { font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 0.5px; }
 
 /* ── PAGE HEADER ── */
-.page-header {
-    padding: 24px 0 18px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 22px;
-}
-.page-header .eyebrow {
-    font-family: var(--font-mono); font-size: 10px; color: var(--accent);
-    letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 6px;
-}
-.page-header h1 {
-    font-size: 26px !important; font-weight: 800 !important;
-    color: var(--text-1) !important; margin: 0 !important; letter-spacing: -0.4px;
-}
-.page-header .sub {
-    font-size: 13px; color: var(--text-2); margin-top: 6px;
-    font-family: var(--font-mono);
-}
+.page-header { padding: 12px 0 24px; border-bottom: 2px solid var(--border); margin-bottom: 32px; }
+.page-header .eyebrow { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+.page-header h1 { font-size: 32px !important; font-weight: 800 !important; color: var(--text-1) !important; margin: 0 !important; letter-spacing: -1px; line-height: 1.2 !important; }
+.page-header .sub { font-size: 15px; font-weight: 500; color: var(--text-2); margin-top: 8px; }
 
-/* ── SECTION / COL LABELS ── */
-.section-label {
-    font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
-    letter-spacing: 2px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-}
-.section-label::before {
-    content: ''; width: 12px; height: 1px; background: var(--border-hi); display: inline-block;
-}
-.col-header {
-    font-family: var(--font-mono); font-size: 10px; color: var(--text-3);
-    letter-spacing: 2px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 6px;
-    margin-bottom: 8px; padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-}
-.dot-status { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-.dot-blue   { background: var(--accent); }
-.dot-green  { background: var(--green); }
-.dot-red    { background: var(--red); }
+/* ── LABELS & TEXTS ── */
+.section-label { font-family: var(--font-ui); font-size: 12px; font-weight: 800; color: var(--text-1) !important; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.section-label::before { content: ''; width: 16px; height: 3px; background: var(--accent); display: inline-block; border-radius: 2px; }
+.col-header { font-family: var(--font-ui); font-size: 11px; font-weight: 800; color: var(--text-1) !important; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.dot-status { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-blue   { background: var(--text-1); } .dot-green  { background: var(--accent); } .dot-red    { background: var(--red); }
 
 /* ── STAT PILLS ── */
-.stat-row  { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-.stat-pill {
-    flex: 1; min-width: 110px;
-    background: var(--bg-raised); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 12px 14px; text-align: center;
-}
-.stat-pill .sp-label {
-    font-family: var(--font-mono); font-size: 9px; color: var(--text-3);
-    letter-spacing: 1.5px; text-transform: uppercase; display: block; margin-bottom: 4px;
-}
-.stat-pill .sp-val {
-    font-size: 22px; font-weight: 700; color: var(--text-1); font-family: var(--font-mono);
-}
+.stat-row  { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+.stat-pill { flex: 1; min-width: 130px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px 16px; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: transform 0.2s; }
+.stat-pill:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+.stat-pill .sp-label { font-family: var(--font-ui); font-size: 11px; font-weight: 700; color: var(--text-2); letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 8px; }
+.stat-pill .sp-val { font-size: 28px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px;}
 
 /* ── BUTTONS ── */
-.stButton > button {
-    font-family: var(--font-ui) !important; font-size: 13px !important;
-    font-weight: 600 !important; letter-spacing: 0.8px !important;
-    border-radius: var(--r) !important;
-    border: 1px solid var(--border-hi) !important;
-    background: var(--bg-raised) !important;
-    color: var(--text-1) !important;
-    transition: all 0.2s !important; padding: 10px 20px !important;
-}
-.stButton > button:hover {
-    border-color: var(--accent) !important;
-    background: var(--accent-dim) !important;
-    color: var(--accent) !important;
-}
-.stDownloadButton > button {
-    font-family: var(--font-ui) !important; font-weight: 700 !important;
-    font-size: 13px !important; letter-spacing: 0.8px !important;
-    border-radius: var(--r) !important;
-    background: var(--accent) !important;
-    color: var(--bg-deep) !important; border: none !important;
-    padding: 12px 20px !important;
-}
+.stButton > button { font-family: var(--font-ui) !important; font-size: 14px !important; font-weight: 700 !important; border-radius: 8px !important; border: 1px solid var(--border-hi) !important; background: var(--bg-surface) !important; color: var(--text-1) !important; transition: all 0.2s ease !important; padding: 10px 24px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; }
+.stButton > button:hover { border-color: var(--accent) !important; background: var(--bg-raised) !important; color: var(--accent) !important; }
+.stDownloadButton > button { font-family: var(--font-ui) !important; font-weight: 800 !important; font-size: 14px !important; border-radius: 8px !important; background: var(--accent) !important; color: white !important; border: none !important; padding: 12px 24px !important; box-shadow: 0 4px 6px rgba(255,107,0,0.2) !important; }
+.stDownloadButton > button:hover { opacity: 0.9 !important; transform: translateY(-1px) !important; }
 
-/* ── INPUTS ── */
-.stTextInput > label, .stMultiselect > label,
-.stSlider > label, .stFileUploader > label, .stCheckbox > label {
-    font-family: var(--font-mono) !important; font-size: 11px !important;
-    color: var(--text-3) !important; letter-spacing: 1.5px !important;
-    text-transform: uppercase !important;
-}
-.stTextInput > div > div > input {
-    background: var(--bg-raised) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--r) !important;
-    color: var(--text-1) !important;
-    font-family: var(--font-mono) !important;
-    font-size: 13px !important; padding: 10px 14px !important;
-}
-.stTextInput > div > div > input:focus {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px var(--accent-glow) !important;
-}
+/* ── INPUTS & CHECKBOXES ── */
+.stTextInput > label, .stMultiselect > label, .stSlider > label, .stFileUploader > label { font-family: var(--font-ui) !important; font-size: 12px !important; font-weight: 700 !important; color: var(--text-1) !important; margin-bottom: 8px !important; }
+.stCheckbox > label span { font-weight: 600 !important; color: var(--text-1) !important; }
+.stTextInput > div > div > input { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; color: var(--text-1) !important; font-size: 14px !important; padding: 12px 16px !important; transition: all 0.2s !important; }
+.stTextInput > div > div > input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important; }
 .stTextInput > div > div > input::placeholder { color: var(--text-3) !important; }
-[data-baseweb="select"] > div {
-    background: var(--bg-raised) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--r) !important;
-}
-[data-baseweb="tag"] {
-    background: var(--accent-dim) !important;
-    border: 1px solid rgba(59,158,255,0.3) !important;
-    border-radius: 6px !important;
-}
-[data-baseweb="tag"] span { color: var(--accent) !important; font-size: 11px !important; }
-[data-baseweb="menu"] {
-    background: var(--bg-raised) !important;
-    border: 1px solid var(--border-hi) !important;
-    border-radius: var(--r) !important;
-}
-[data-baseweb="option"] { background: transparent !important; color: var(--text-2) !important; }
-[data-baseweb="option"]:hover { background: var(--bg-hover) !important; color: var(--text-1) !important; }
-
-/* ── SLIDER ── */
-[data-baseweb="slider"]           { padding: 6px 0 !important; }
-[data-baseweb="track-background"] { background: var(--border-hi) !important; height: 3px !important; border-radius: 2px !important; }
-[data-baseweb="track-fill"]       { background: var(--accent) !important; height: 3px !important; }
-[data-baseweb="thumb"] {
-    background: var(--bg-deep) !important;
-    border: 2px solid var(--accent) !important;
-    width: 16px !important; height: 16px !important;
-    box-shadow: 0 0 0 4px var(--accent-glow) !important;
-}
+[data-baseweb="select"] > div { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; transition: all 0.2s !important; }
+[data-baseweb="select"] > div:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important;}
+[data-baseweb="tag"] { background: var(--accent-dim) !important; border: none !important; border-radius: 6px !important; padding: 4px 8px !important; }
+[data-baseweb="tag"] span { color: var(--accent) !important; font-size: 12px !important; font-weight: 700 !important; }
+[data-baseweb="menu"] { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; }
+[data-baseweb="option"] { background: transparent !important; color: var(--text-1) !important; font-size: 14px !important; font-weight: 500 !important;}
+[data-baseweb="option"]:hover { background: var(--bg-raised) !important; color: var(--accent) !important;}
+[data-baseweb="slider"] { padding: 10px 0 !important; }
+[data-baseweb="track-background"] { background: var(--border) !important; height: 4px !important; border-radius: 2px !important; }
+[data-baseweb="track-fill"] { background: var(--accent) !important; height: 4px !important; }
+[data-baseweb="thumb"] { background: white !important; border: 3px solid var(--accent) !important; width: 20px !important; height: 20px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; }
 
 /* ── EXPANDER ── */
-[data-testid="stExpander"] {
-    background: var(--bg-surface) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--r-lg) !important;
-    margin-bottom: 16px !important; overflow: hidden !important;
-}
-[data-testid="stExpander"] summary {
-    font-family: var(--font-mono) !important; font-size: 11px !important;
-    color: var(--text-2) !important; letter-spacing: 1.5px !important;
-    text-transform: uppercase !important; padding: 14px 18px !important;
-    background: var(--bg-surface) !important;
-}
-[data-testid="stExpander"] summary:hover { background: var(--bg-raised) !important; }
-[data-testid="stExpander"] > div > div   { padding: 0 18px 18px !important; }
+[data-testid="stExpander"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: var(--r-lg) !important; margin-bottom: 24px !important; overflow: hidden !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02) !important; }
+[data-testid="stExpander"] summary { font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; color: var(--text-1) !important; padding: 16px 24px !important; background: var(--bg-raised) !important; border-bottom: 1px solid var(--border) !important; }
+[data-testid="stExpander"] summary:hover { background: var(--bg-hover) !important; }
+[data-testid="stExpander"] > div > div   { padding: 24px !important; }
 
-/* ── TABS ── */
-.stTabs [data-baseweb="tab-list"] {
-    background: transparent !important;
-    border-bottom: 1px solid var(--border) !important;
-    gap: 0 !important;
-}
-.stTabs [data-baseweb="tab"] {
-    background: transparent !important; color: var(--text-3) !important;
-    border: none !important; border-bottom: 2px solid transparent !important;
-    font-family: var(--font-mono) !important; font-size: 11px !important;
-    letter-spacing: 1.5px !important; text-transform: uppercase !important;
-    padding: 12px 22px !important; border-radius: 0 !important;
-}
+/* ── TABS & PROGRESS ── */
+.stTabs [data-baseweb="tab-list"] { background: transparent !important; border-bottom: 1px solid var(--border) !important; gap: 16px !important; }
+.stTabs [data-baseweb="tab"] { background: transparent !important; color: var(--text-3) !important; border: none !important; border-bottom: 3px solid transparent !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; padding: 12px 4px !important; border-radius: 0 !important; transition: color 0.2s; }
 .stTabs [data-baseweb="tab"]:hover { color: var(--text-1) !important; }
-.stTabs [aria-selected="true"] {
-    color: var(--accent) !important;
-    border-bottom: 2px solid var(--accent) !important;
-    font-weight: 600 !important;
-}
-.stTabs [data-baseweb="tab-panel"] { padding: 24px 0 0 !important; }
+.stTabs [aria-selected="true"] { color: var(--accent) !important; border-bottom: 3px solid var(--accent) !important; font-weight: 800 !important; }
+.stTabs [data-baseweb="tab-panel"] { padding: 32px 0 0 !important; }
+.stProgress > div > div { background: var(--border) !important; border-radius: 4px !important; height: 6px !important; }
+.stProgress > div > div > div { background: var(--accent) !important; height: 6px !important; border-radius: 4px !important; }
 
-/* ── PROGRESS BAR ── */
-.stProgress > div > div       { background: var(--bg-raised) !important; border-radius: 2px !important; height: 3px !important; }
-.stProgress > div > div > div { background: var(--accent) !important; height: 3px !important; }
-
-/* ── ALERTS ── */
-[data-testid="stAlert"] {
-    background: var(--bg-raised) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--r) !important;
-    font-family: var(--font-mono) !important; font-size: 13px !important;
-}
-[data-testid="stAlert"][data-type="success"] { border-left: 3px solid var(--green) !important; }
-[data-testid="stAlert"][data-type="error"]   { border-left: 3px solid var(--red) !important; }
-[data-testid="stAlert"][data-type="warning"] { border-left: 3px solid var(--amber) !important; }
-[data-testid="stAlert"][data-type="info"]    { border-left: 3px solid var(--accent) !important; }
-
-/* ── MISC ── */
-hr { border: none !important; border-top: 1px solid var(--border) !important; margin: 20px 0 !important; }
-[data-testid="stFileUploaderDropzone"] {
-    background: var(--bg-surface) !important;
-    border: 1.5px dashed var(--border-hi) !important;
-    border-radius: var(--r-lg) !important; padding: 24px !important;
-}
-[data-testid="stFileUploaderDropzone"]:hover {
-    border-color: var(--accent) !important; background: var(--bg-raised) !important;
-}
-[data-testid="stFileUploaderDropzone"] button {
-    background: var(--accent-dim) !important; border: 1px solid var(--accent) !important;
-    color: var(--accent) !important; border-radius: var(--r) !important;
-    font-family: var(--font-ui) !important; font-size: 12px !important; font-weight: 600 !important;
-}
-video {
-    border-radius: var(--r) !important;
-    border: 1px solid var(--border) !important;
-    width: 100% !important;
-}
-[data-testid="stImage"] img { border-radius: var(--r) !important; border: 1px solid var(--border) !important; }
-.stMarkdown p { color: var(--text-2) !important; font-size: 13px !important; font-family: var(--font-mono) !important; line-height: 1.7 !important; }
+/* ── ALERTS & MISC ── */
+[data-testid="stAlert"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 14px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;}
+[data-testid="stAlert"][data-type="success"] { border-left: 4px solid var(--green) !important; }
+[data-testid="stAlert"][data-type="error"]   { border-left: 4px solid var(--red) !important; }
+hr { border: none !important; border-top: 1px solid var(--border) !important; margin: 32px 0 !important; }
+[data-testid="stFileUploaderDropzone"] { background: var(--bg-surface) !important; border: 2px dashed var(--border-hi) !important; border-radius: var(--r-lg) !important; padding: 40px 24px !important; transition: all 0.2s ease !important; }
+[data-testid="stFileUploaderDropzone"]:hover { border-color: var(--accent) !important; background: var(--accent-dim) !important; }
+[data-testid="stFileUploaderDropzone"] button { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; color: var(--text-1) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; padding: 8px 16px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;}
+video { border-radius: var(--r-lg) !important; border: 1px solid var(--border) !important; width: 100% !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
+[data-testid="stImage"] img { border-radius: var(--r-lg) !important; border: 1px solid var(--border) !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;}
+.stMarkdown p { color: var(--text-1) !important; font-size: 15px !important; font-family: var(--font-ui) !important; font-weight: 500 !important; line-height: 1.6 !important; }
 .main .block-container { padding: 0 2rem 2rem !important; max-width: 1200px; }
-.status-text { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 1px; padding: 8px 0; }
+.status-text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-2); letter-spacing: 0.5px; padding: 12px 0; }
 </style>
 """
 
@@ -496,63 +265,72 @@ def show_auth_page():
 def show_main_app():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
 
-    with st.sidebar:
-        init = st.session_state['username'][0].upper() if st.session_state['username'] else "?"
+    # 📌 1. โลโก้ และ User Profile (ไว้ด้านบนสุดแทน Sidebar)
+    init = st.session_state['username'][0].upper() if st.session_state['username'] else "?"
+    
+    col1, col2 = st.columns([1, 1])
+    with col1:
         st.markdown(f"""
-        <div class="sidebar-brand">
-            <div class="logo-mark">
-                <div class="hex">⬡</div>
-                <h2>AI-Dataset Pro</h2>
-            </div>
-            <p>COMPUTER VISION · v6.0</p>
+        <div class="top-brand">
+            <div class="hex">⬡</div>
+            <h2>AI-Dataset Pro</h2>
         </div>
-        <div class="user-badge">
-            <div class="avatar">{init}</div>
-            <div>
-                <div class="uname">{st.session_state['username'].upper()}</div>
+        """, unsafe_allow_html=True)
+    with col2:
+        st.markdown(f"""
+        <div class="top-user">
+            <div style="text-align: right;">
+                <div class="uname">{st.session_state['username']}</div>
                 <div class="ustatus">● ACTIVE SESSION</div>
             </div>
+            <div class="avatar">{init}</div>
         </div>
         """, unsafe_allow_html=True)
 
-        selected_menu = option_menu(
-            menu_title=None,
-            options=["Dashboard", "AI Engine", "Logout"],
-            icons=["grid-1x2", "cpu", "box-arrow-right"],
-            default_index=1,
-            styles={
-                "container": {"background-color": "transparent", "padding": "8px 0"},
-                "icon": {"font-size": "14px", "color": "#7a96b4"},
-                "nav-link": {
-                    "font-size": "13px",
-                    "font-weight": "500",
-                    "color": "#7a96b4",
-                    "border-radius": "10px",
-                    "margin": "2px 8px",
-                    "padding": "10px 14px",
-                    "font-family": "'Syne', sans-serif",
-                },
-                "nav-link-selected": {
-                    "background-color": "rgba(59,158,255,0.12)",
-                    "color": "#3b9eff",
-                    "border": "1px solid rgba(59,158,255,0.28)",
-                    "font-weight": "600",
-                },
-            }
-        )
-        if selected_menu == "Logout":
-            st.session_state.clear()
-            st.rerun()
+    st.write("") # เว้นบรรทัดนิดนึงให้ดูโปร่งๆ
 
-    # ── AI ENGINE ──
+    # 📌 2. เมนูแนวนอน (Horizontal Menu)
+    selected_menu = option_menu(
+        menu_title=None,
+        options=["Dashboard", "AI Engine", "Logout"],
+        icons=["grid-1x2", "cpu", "box-arrow-right"],
+        default_index=1,
+        orientation="horizontal", # 📌 บังคับเป็นแนวนอน
+        styles={
+            "container": {
+                "background-color": "var(--bg-surface)", 
+                "border": "1px solid var(--border)", 
+                "border-radius": "12px", 
+                "padding": "5px", 
+                "box-shadow": "0 4px 6px -1px rgba(0,0,0,0.02)",
+                "margin-bottom": "30px"
+            },
+            "icon": {"color": "var(--text-3)", "font-size": "16px"},
+            "nav-link": {
+                "font-size": "14px", 
+                "font-weight": "700", 
+                "color": "var(--text-2)", 
+                "font-family": "var(--font-ui)", 
+                "border-radius": "8px", 
+                "padding": "10px",
+                "margin": "0 4px"
+            },
+            "nav-link-selected": {
+                "background-color": "var(--accent-dim)", 
+                "color": "var(--accent)", 
+                "border": "1px solid rgba(255,107,0,0.2)"
+            },
+        }
+    )
+
+    if selected_menu == "Logout":
+        st.session_state.clear()
+        st.rerun()
+
+    # ── AI ENGINE PAGE ────────────────────────
     if selected_menu == "AI Engine":
-        st.markdown("""
-        <div class="page-header">
-            <div class="eyebrow">MODULE / AI ENGINE</div>
-            <h1>Dataset Generation</h1>
-            <div class="sub">Extract, label, filter & augment training data from video</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="page-header"><div class="eyebrow">MODULE / AI ENGINE</div><h1>Dataset Generation</h1><div class="sub">Extract, label, filter & augment training data from video</div></div>', unsafe_allow_html=True)
+        # ... (โค้ดส่วน AI Engine ดั้งเดิมของคุณ อยู่ตรงนี้เหมือนเดิมครับ)
 
         @st.cache_resource
         def load_model():
