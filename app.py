@@ -11,11 +11,12 @@ import numpy as np
 import re
 import pandas as pd
 import datetime
+import requests
 from ultralytics import YOLO
 from streamlit_option_menu import option_menu
 
 # ==========================================
-# Page Config (บังคับ Sidebar ให้ซ่อนตั้งแต่เริ่ม)
+# Page Config
 # ==========================================
 st.set_page_config(
     page_title="AI-Dataset Pro",
@@ -25,7 +26,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# Database System
+# Database System & Notifications
 # ==========================================
 conn = sqlite3.connect('users.db', check_same_thread=False)
 c = conn.cursor()
@@ -49,34 +50,46 @@ def add_history(username, total_img, blur_skip):
     c.execute('INSERT INTO historytable VALUES (?,?,?,?)', (username, total_img, blur_skip, now))
     conn.commit()
 
+def send_telegram_notify(bot_token, chat_id, message):
+    if not bot_token or not chat_id: return
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    data = {"chat_id": chat_id, "text": message}
+    try:
+        requests.post(url, data=data)
+    except Exception:
+        pass
+
 create_tables()
 
-if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
-if 'username' not in st.session_state: st.session_state['username'] = ""
+if 'logged_in'       not in st.session_state: st.session_state['logged_in']       = False
+if 'username'        not in st.session_state: st.session_state['username']         = ""
+if 'reg_attempts'    not in st.session_state: st.session_state['reg_attempts']     = 0
+if 'reg_last_time'   not in st.session_state: st.session_state['reg_last_time']    = datetime.datetime.now()
+if 'just_registered' not in st.session_state: st.session_state['just_registered']  = False
 
 # ==========================================
-# Global CSS (Modern Clean & Orange Theme - Top Menu)
+# Global CSS
 # ==========================================
 THEME_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --bg-deep:     #f8fafc; 
-    --bg-surface:  #ffffff; 
-    --bg-raised:   #f1f5f9; 
+    --bg-deep:     #f8fafc;
+    --bg-surface:  #ffffff;
+    --bg-raised:   #f1f5f9;
     --bg-hover:    #e2e8f0;
-    --border:      #e2e8f0; 
+    --border:      #e2e8f0;
     --border-hi:   #cbd5e1;
-    --accent:      #ff6b00; 
-    --accent-dim:  rgba(255, 107, 0, 0.1); 
+    --accent:      #ff6b00;
+    --accent-dim:  rgba(255, 107, 0, 0.1);
     --accent-glow: rgba(255, 107, 0, 0.2);
-    --green:       #10b981; 
-    --red:         #ef4444; 
-    --amber:       #f59e0b; 
-    --text-1:      #000000; 
-    --text-2:      #111827; 
-    --text-3:      #374151; 
+    --green:       #10b981;
+    --red:         #ef4444;
+    --amber:       #f59e0b;
+    --text-1:      #0f172a;
+    --text-2:      #1e293b;
+    --text-3:      #475569;
     --font-ui:     'Inter', sans-serif;
     --font-mono:   'DM Mono', monospace;
     --r:           10px;
@@ -89,17 +102,19 @@ html, body, .stApp { background-color: var(--bg-deep) !important; color: var(--t
 [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
 header[data-testid="stHeader"] { background-color: transparent !important; border-bottom: none !important; box-shadow: none !important; }
 [data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
-.appview-container { background-color: var(--bg-deep) !important; } 
+.appview-container { background-color: var(--bg-deep) !important; }
 .main > div { padding-top: 1.5rem !important; }
-::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
 
-/* ── TOP HEADER (Brand & User) ── */
+/* ── TOP HEADER ── */
 .top-brand { display: flex; align-items: center; gap: 12px; }
 .top-brand .hex { width: 36px; height: 36px; background: var(--accent-dim); border: 1px solid rgba(255,107,0,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--accent); font-weight: 800; }
 .top-brand h2 { font-size: 20px !important; font-weight: 800 !important; color: var(--text-1) !important; margin: 0 !important; letter-spacing: -0.5px; }
-.top-user { display: flex; align-items: center; gap: 12px; justify-content: flex-end; padding: 4px 0;}
+.top-user { display: flex; align-items: center; gap: 12px; justify-content: flex-end; padding: 4px 0; }
 .top-user .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; box-shadow: 0 2px 4px rgba(255,107,0,0.3); }
-.top-user .uname { font-size: 14px; font-weight: 800; color: var(--text-1) !important; line-height: 1.2; text-transform: uppercase;}
+.top-user .uname { font-size: 14px; font-weight: 800; color: var(--text-1) !important; line-height: 1.2; text-transform: uppercase; }
 .top-user .ustatus { font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 0.5px; }
 
 /* ── PAGE HEADER ── */
@@ -113,14 +128,16 @@ header[data-testid="stHeader"] { background-color: transparent !important; borde
 .section-label::before { content: ''; width: 16px; height: 3px; background: var(--accent); display: inline-block; border-radius: 2px; }
 .col-header { font-family: var(--font-ui); font-size: 11px; font-weight: 800; color: var(--text-1) !important; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
 .dot-status { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.dot-blue   { background: var(--text-1); } .dot-green  { background: var(--accent); } .dot-red    { background: var(--red); }
+.dot-blue  { background: var(--text-1); }
+.dot-green { background: var(--accent); }
+.dot-red   { background: var(--red); }
 
 /* ── STAT PILLS ── */
 .stat-row  { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
 .stat-pill { flex: 1; min-width: 130px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px 16px; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: transform 0.2s; }
 .stat-pill:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
 .stat-pill .sp-label { font-family: var(--font-ui); font-size: 11px; font-weight: 700; color: var(--text-2); letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 8px; }
-.stat-pill .sp-val { font-size: 28px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px;}
+.stat-pill .sp-val { font-size: 28px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; }
 
 /* ── BUTTONS ── */
 .stButton > button { font-family: var(--font-ui) !important; font-size: 14px !important; font-weight: 700 !important; border-radius: 8px !important; border: 1px solid var(--border-hi) !important; background: var(--bg-surface) !important; color: var(--text-1) !important; transition: all 0.2s ease !important; padding: 10px 24px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; }
@@ -135,7 +152,7 @@ header[data-testid="stHeader"] { background-color: transparent !important; borde
 .stTextInput > div > div > input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important; }
 .stTextInput > div > div > input::placeholder { color: var(--text-3) !important; }
 [data-baseweb="select"] > div { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; transition: all 0.2s !important; }
-[data-baseweb="select"] > div:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important;}
+[data-baseweb="select"] > div:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important; }
 [data-baseweb="tag"] { background: var(--accent-dim) !important; border: none !important; border-radius: 6px !important; padding: 4px 8px !important; }
 [data-baseweb="tag"] span { color: var(--accent) !important; font-size: 12px !important; font-weight: 700 !important; }
 
@@ -143,30 +160,39 @@ header[data-testid="stHeader"] { background-color: transparent !important; borde
 [data-testid="stExpander"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: var(--r-lg) !important; margin-bottom: 24px !important; overflow: hidden !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02) !important; }
 [data-testid="stExpander"] summary { font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; color: var(--text-1) !important; padding: 16px 24px !important; background: var(--bg-raised) !important; border-bottom: 1px solid var(--border) !important; }
 [data-testid="stExpander"] summary:hover { background: var(--bg-hover) !important; }
-[data-testid="stExpander"] > div > div   { padding: 24px !important; }
+[data-testid="stExpander"] > div > div { padding: 24px !important; }
 
 /* ── TABS & PROGRESS ── */
 .stTabs [data-baseweb="tab-list"] { background: transparent !important; border-bottom: 1px solid var(--border) !important; gap: 16px !important; }
-.stTabs [data-baseweb="tab"] { background: transparent !important; color: var(--text-3) !important; border: none !important; border-bottom: 3px solid transparent !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; padding: 12px 4px !important; border-radius: 0 !important; transition: color 0.2s; }
+.stTabs [data-baseweb="tab"] { background: transparent !important; color: var(--text-3) !important; border: none !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; padding: 12px 4px !important; border-radius: 0 !important; transition: color 0.2s; }
 .stTabs [data-baseweb="tab"]:hover { color: var(--text-1) !important; }
 .stTabs [aria-selected="true"] { color: var(--accent) !important; border-bottom: 3px solid var(--accent) !important; font-weight: 800 !important; }
 .stTabs [data-baseweb="tab-panel"] { padding: 32px 0 0 !important; }
 .stProgress > div > div { background: var(--border) !important; border-radius: 4px !important; height: 6px !important; }
 .stProgress > div > div > div { background: var(--accent) !important; height: 6px !important; border-radius: 4px !important; }
 
-/* ── ALERTS & MISC ── */
-[data-testid="stAlert"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 14px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;}
+/* ── ALERTS ── */
+[data-testid="stAlert"] { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 14px !important; box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; }
 [data-testid="stAlert"][data-type="success"] { border-left: 4px solid var(--green) !important; }
 [data-testid="stAlert"][data-type="error"]   { border-left: 4px solid var(--red) !important; }
 hr { border: none !important; border-top: 1px solid var(--border) !important; margin: 32px 0 !important; }
+
+/* ── FILE UPLOADER ── */
 [data-testid="stFileUploaderDropzone"] { background: var(--bg-surface) !important; border: 2px dashed var(--border-hi) !important; border-radius: var(--r-lg) !important; padding: 40px 24px !important; transition: all 0.2s ease !important; }
 [data-testid="stFileUploaderDropzone"]:hover { border-color: var(--accent) !important; background: var(--accent-dim) !important; }
-[data-testid="stFileUploaderDropzone"] button { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; color: var(--text-1) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; padding: 8px 16px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;}
-video { border-radius: var(--r-lg) !important; border: 1px solid var(--border) !important; width: 100% !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
-[data-testid="stImage"] img { border-radius: var(--r-lg) !important; border: 1px solid var(--border) !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;}
+[data-testid="stFileUploaderDropzone"] button { background: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; color: var(--text-1) !important; border-radius: 8px !important; font-family: var(--font-ui) !important; font-size: 13px !important; font-weight: 700 !important; padding: 8px 16px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; }
+
+/* ── VIDEO & IMAGE ── */
+video { border-radius: 12px !important; border: 1px solid var(--border) !important; width: 100% !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
+[data-testid="stImage"] img { border-radius: 12px !important; border: 1px solid var(--border) !important; width: 100% !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
+
+/* ── TYPOGRAPHY ── */
 .stMarkdown p { color: var(--text-1) !important; font-size: 15px !important; font-family: var(--font-ui) !important; font-weight: 500 !important; line-height: 1.6 !important; }
 .main .block-container { padding: 0 2rem 2rem !important; max-width: 1200px; }
 .status-text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-2); letter-spacing: 0.5px; padding: 12px 0; }
+
+/* ── AUTH CARD ── */
+.auth-input-label { font-family: var(--font-ui); font-size: 11px; font-weight: 700; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; margin-top: 12px; }
 </style>
 """
 
@@ -189,7 +215,32 @@ def show_auth_page():
         </div>
         """, unsafe_allow_html=True)
 
+        # ── แสดง success message + default ไป Login tab หลังสมัครเสร็จ ──
+        if st.session_state.get('just_registered'):
+            tab1, tab2 = st.tabs(["LOGIN", "REGISTER"])
+            with tab1:
+                st.success("✅ Account created successfully — please log in")
+                st.session_state['just_registered'] = False
+                login_user_input = st.text_input("Username", key="login_user_post_reg", placeholder="your username")
+                login_pass_input = st.text_input("Password", type="password", key="login_pass_post_reg", placeholder="••••••••")
+                if st.button("INITIATE LOGIN", use_container_width=True, key="btn_login_post_reg"):
+                    if login_user_input and login_pass_input:
+                        if login_user(login_user_input, login_pass_input):
+                            st.session_state['logged_in'] = True
+                            st.session_state['username']  = login_user_input
+                            st.rerun()
+                        else:
+                            st.error("Access denied — invalid credentials")
+                    else:
+                        st.warning("Please fill in all fields")
+            with tab2:
+                st.info("Registration complete. Switch to LOGIN tab to continue.")
+            return  # หยุดไม่ render ส่วนล่างซ้ำ
+
+        # ── Normal Auth ──
         tab1, tab2 = st.tabs(["LOGIN", "REGISTER"])
+
+        # ── LOGIN ──
         with tab1:
             login_user_input = st.text_input("Username", key="login_user", placeholder="your username")
             login_pass_input = st.text_input("Password", type="password", key="login_pass", placeholder="••••••••")
@@ -197,17 +248,19 @@ def show_auth_page():
                 if login_user_input and login_pass_input:
                     if login_user(login_user_input, login_pass_input):
                         st.session_state['logged_in'] = True
-                        st.session_state['username'] = login_user_input
+                        st.session_state['username']  = login_user_input
                         st.rerun()
                     else:
                         st.error("Access denied — invalid credentials")
                 else:
                     st.warning("Please fill in all fields")
 
+        # ── REGISTER ──
         with tab2:
             new_user = st.text_input("New Username", key="reg_user", placeholder="choose a username")
             new_pass = st.text_input("New Password", type="password", key="reg_pass", placeholder="••••••••")
             is_strong = False
+
             if new_pass:
                 score = sum([
                     len(new_pass) >= 8,
@@ -217,7 +270,7 @@ def show_auth_page():
                     bool(re.search(r"[@$!%*?&_#^-]", new_pass))
                 ])
                 clr = "var(--red)" if score <= 2 else "var(--amber)" if score <= 4 else "var(--green)"
-                lbl = "WEAK" if score <= 2 else "FAIR" if score <= 4 else "STRONG"
+                lbl = "WEAK"       if score <= 2 else "FAIR"         if score <= 4 else "STRONG"
                 st.markdown(f"""
                 <div style="margin-top:-10px;margin-bottom:15px;">
                     <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);
@@ -236,16 +289,34 @@ def show_auth_page():
                     is_strong = True
 
             if st.button("CREATE ACCOUNT", use_container_width=True, key="btn_register"):
-                if new_user and new_pass:
+                # ── Rate Limiting: 3 ครั้ง / 60 วินาที ──
+                now     = datetime.datetime.now()
+                elapsed = (now - st.session_state['reg_last_time']).total_seconds()
+                if elapsed > 60:
+                    st.session_state['reg_attempts']  = 0
+                    st.session_state['reg_last_time'] = now
+
+                if st.session_state['reg_attempts'] >= 3:
+                    remaining = max(0, int(60 - elapsed))
+                    st.error(f"⚠️ Too many attempts — please wait {remaining}s before trying again")
+                elif new_user and new_pass:
                     if not is_strong:
                         st.error("Please use a stronger password (STRONG level required)")
                     else:
                         c.execute('SELECT * FROM userstable WHERE username=?', (new_user,))
                         if c.fetchone():
+                            st.session_state['reg_attempts'] += 1
                             st.error("Username already exists")
                         else:
                             add_userdata(new_user, new_pass)
-                            st.success("Account created — you can now log in")
+                            st.session_state['reg_attempts'] += 1
+                            # ── ล้างค่า input fields ──
+                            for k in ['reg_user', 'reg_pass']:
+                                if k in st.session_state:
+                                    del st.session_state[k]
+                            # ── Redirect ไป Login tab ──
+                            st.session_state['just_registered'] = True
+                            st.rerun()
                 else:
                     st.warning("Please fill in all fields")
 
@@ -255,11 +326,11 @@ def show_auth_page():
 def show_main_app():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
 
-    # 📌 1. Top Header (Logo & User Profile)
+    # ── Top Header ──
     init = st.session_state['username'][0].upper() if st.session_state['username'] else "?"
     col1, col2 = st.columns([1, 1])
     with col1:
-        st.markdown(f"""
+        st.markdown("""
         <div class="top-brand">
             <div class="hex">⬡</div>
             <h2>AI-Dataset Pro</h2>
@@ -268,18 +339,18 @@ def show_main_app():
     with col2:
         st.markdown(f"""
         <div class="top-user">
-            <div style="text-align: right;">
+            <div style="text-align:right;">
                 <div class="uname">{st.session_state['username']}</div>
                 <div class="ustatus">● ACTIVE SESSION</div>
             </div>
             <div class="avatar">{init}</div>
         </div>
         """, unsafe_allow_html=True)
-    st.write("") 
+    st.write("")
 
-    # 📌 2. Top Navigation Menu แนวนอน
     is_admin = (st.session_state['username'].lower() == 'admin')
-    
+
+    # ── Top Navigation ──
     selected_menu = option_menu(
         menu_title=None,
         options=["Dashboard", "AI Engine", "Logout"],
@@ -288,26 +359,26 @@ def show_main_app():
         orientation="horizontal",
         styles={
             "container": {
-                "background-color": "var(--bg-surface)", 
-                "border": "1px solid var(--border)", 
-                "border-radius": "12px", 
-                "padding": "5px", 
+                "background-color": "var(--bg-surface)",
+                "border": "1px solid var(--border)",
+                "border-radius": "12px",
+                "padding": "5px",
                 "box-shadow": "0 4px 6px -1px rgba(0,0,0,0.02)",
                 "margin-bottom": "30px"
             },
             "icon": {"color": "var(--text-3)", "font-size": "16px"},
             "nav-link": {
-                "font-size": "14px", 
-                "font-weight": "700", 
-                "color": "var(--text-2)", 
-                "font-family": "var(--font-ui)", 
-                "border-radius": "8px", 
+                "font-size": "14px",
+                "font-weight": "700",
+                "color": "var(--text-2)",
+                "font-family": "var(--font-ui)",
+                "border-radius": "8px",
                 "padding": "10px",
                 "margin": "0 4px"
             },
             "nav-link-selected": {
-                "background-color": "var(--accent-dim)", 
-                "color": "var(--accent)", 
+                "background-color": "var(--accent-dim)",
+                "color": "var(--accent)",
                 "border": "1px solid rgba(255,107,0,0.2)"
             },
         }
@@ -317,8 +388,11 @@ def show_main_app():
         st.session_state.clear()
         st.rerun()
 
-    # ── AI ENGINE PAGE ────────────────────────
+    # ══════════════════════════════════════════
+    # AI ENGINE PAGE
+    # ══════════════════════════════════════════
     if selected_menu == "AI Engine":
+
         st.markdown("""
         <div class="page-header">
             <div class="eyebrow">MODULE / AI ENGINE</div>
@@ -333,18 +407,19 @@ def show_main_app():
         model = load_model()
         available_classes = model.names
 
-        with st.expander("⚙  NEURAL NETWORK & SYSTEM CONFIGURATION"):
+        with st.expander("⚙  NEURAL NETWORK & SYSTEM CONFIGURATION", expanded=True):
             col1, col2, col3, col4 = st.columns(4, gap="medium")
             with col1:
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">AI TARGETS</p>', unsafe_allow_html=True)
                 selected_class_names = st.multiselect("Detection Targets", list(available_classes.values()), default=["person", "car"], label_visibility="collapsed")
-                selected_class_ids = [k for k, v in available_classes.items() if v in selected_class_names]
+                selected_class_ids   = [k for k, v in available_classes.items() if v in selected_class_names]
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-top:10px;margin-bottom:6px;text-transform:uppercase;">CONFIDENCE (%)</p>', unsafe_allow_html=True)
                 conf_threshold = st.slider("Min Confidence", 10, 90, 25, 5, label_visibility="collapsed") / 100.0
             with col2:
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">DATASET SPLIT</p>', unsafe_allow_html=True)
-                split_ratio = st.slider("Train Split (%)", 50, 95, 80)
-                frame_skip  = st.slider("Frame Skip Interval", 1, 30, 5)
+                split_ratio = st.slider("Train Split (%)", 50, 95, 80, label_visibility="collapsed")
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-top:10px;margin-bottom:6px;text-transform:uppercase;">FRAME SKIP</p>', unsafe_allow_html=True)
+                frame_skip  = st.slider("Frame Skip Interval", 1, 30, 5, label_visibility="collapsed")
             with col3:
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">DATA AUGMENTATION</p>', unsafe_allow_html=True)
                 do_flip   = st.checkbox("Horizontal Flip")
@@ -353,7 +428,63 @@ def show_main_app():
             with col4:
                 st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">QUALITY CONTROL</p>', unsafe_allow_html=True)
                 do_blur_filter = st.checkbox("Blur Filter", value=True)
-                blur_threshold = st.slider("Blur Threshold", 20, 200, 60)
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-top:10px;margin-bottom:6px;text-transform:uppercase;">THRESHOLD</p>', unsafe_allow_html=True)
+                blur_threshold = st.slider("Blur Threshold", 20, 200, 60, label_visibility="collapsed")
+
+            # ── Telegram Notification ──
+            st.markdown('<hr style="margin:16px 0;">', unsafe_allow_html=True)
+
+            col_tele_head, col_tele_toggle = st.columns([3, 1])
+            with col_tele_head:
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:2px;text-transform:uppercase;">📱 TELEGRAM NOTIFICATION (OPTIONAL)</p>', unsafe_allow_html=True)
+                st.markdown('<p style="font-family:var(--font-ui);font-size:11px;color:var(--text-3);margin-bottom:6px;">รับแจ้งเตือนผ่าน Telegram Bot เมื่อประมวลผลเสร็จสิ้น</p>', unsafe_allow_html=True)
+            with col_tele_toggle:
+                tele_enabled = st.toggle("Enable Notifications", value=True, key="tele_toggle")
+
+            if tele_enabled:
+                col_t1, col_t2, col_t3 = st.columns([2, 1.5, 1])
+                with col_t1:
+                    st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">🔑 Bot Token</p>', unsafe_allow_html=True)
+                    tele_token = st.text_input(
+                        "Bot Token",
+                        value="8345283139:AAFDKDraPZ9dVjFuEgnbr2bhugUhau-9jGA",
+                        type="password",
+                        placeholder="e.g. 123456789:AAFxxxxxxxxxxxxxxxxxxxxxxx",
+                        label_visibility="collapsed"
+                    )
+                with col_t2:
+                    st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">💬 Chat ID</p>', unsafe_allow_html=True)
+                    tele_chat_id = st.text_input(
+                        "Chat ID",
+                        value="8498185564",
+                        placeholder="e.g. 849818556",
+                        label_visibility="collapsed"
+                    )
+                with col_t3:
+                    st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">🧪 TEST</p>', unsafe_allow_html=True)
+                    if st.button("Send Test", use_container_width=True, key="btn_test_tele"):
+                        if tele_token and tele_chat_id:
+                            try:
+                                test_msg = (
+                                    f"✅ AI-Dataset Pro\n"
+                                    f"การเชื่อมต่อสำเร็จ!\n"
+                                    f"👤 ผู้ใช้งาน: {st.session_state['username']}\n"
+                                    f"🕐 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                                )
+                                url  = f"https://api.telegram.org/bot{tele_token}/sendMessage"
+                                resp = requests.post(url, data={"chat_id": tele_chat_id, "text": test_msg}, timeout=5)
+                                if resp.status_code == 200:
+                                    st.success("✅ ส่งสำเร็จ!")
+                                else:
+                                    st.error(f"❌ Error {resp.status_code}")
+                            except Exception as e:
+                                st.error(f"❌ {str(e)}")
+                        else:
+                            st.warning("กรุณากรอก Token และ Chat ID")
+            else:
+                tele_token   = ""
+                tele_chat_id = ""
+                st.markdown('<p style="font-family:var(--font-ui);font-size:12px;color:var(--text-3);font-weight:500;padding:8px 0;">🔕 Notification ถูกปิดอยู่ — จะไม่มีการส่งแจ้งเตือนเมื่อประมวลผลเสร็จ</p>', unsafe_allow_html=True)
 
         st.markdown('<div class="section-label">Media Source</div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Drop video file here", type=['mp4', 'avi', 'mov'], label_visibility="collapsed")
@@ -415,14 +546,19 @@ def show_main_app():
                             score = cv2.Laplacian(gray, cv2.CV_64F).var()
                             if score < blur_threshold:
                                 skipped_blur_count += 1
-                                blur_warning.markdown(f'<div style="color:var(--red);font-size:13px;font-family:var(--font-ui);font-weight:700;">BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>', unsafe_allow_html=True)
+                                blur_warning.markdown(
+                                    f'<div style="color:var(--red);font-size:13px;font-family:var(--font-ui);font-weight:700;'
+                                    f'padding:8px;border:1px solid var(--red);border-radius:8px;background:var(--bg-surface);">'
+                                    f'⚠️ BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>',
+                                    unsafe_allow_html=True
+                                )
                                 frame_count += 1
                                 continue
                             else:
                                 blur_warning.empty()
 
                         results = model(frame, classes=selected_class_ids if selected_class_ids else None, conf=conf_threshold, verbose=False)
-                        boxes = results[0].boxes
+                        boxes   = results[0].boxes
                         if len(boxes) > 0:
                             save_data(frame, boxes, "original")
                             if do_flip:   save_data(cv2.flip(frame, 1), boxes, "flip", is_flipped=True)
@@ -433,7 +569,10 @@ def show_main_app():
 
                     frame_count += 1
                     progress_bar.progress(min(frame_count / total_frames, 1.0))
-                    status_text.markdown(f'<div class="status-text">PROCESSING  {frame_count} / {total_frames}  FRAMES | EXTRACTED: {len(dataset_records)}</div>', unsafe_allow_html=True)
+                    status_text.markdown(
+                        f'<div class="status-text">PROCESSING  {frame_count} / {total_frames}  FRAMES | EXTRACTED: {len(dataset_records)}</div>',
+                        unsafe_allow_html=True
+                    )
                 cap.release()
                 blur_warning.empty()
 
@@ -445,8 +584,18 @@ def show_main_app():
 
                 add_history(st.session_state['username'], len(dataset_records), skipped_blur_count)
 
-                train_c = sum(1 for r in dataset_records if r['subset'] == 'train')
-                val_c   = len(dataset_records) - train_c
+                if tele_token and tele_chat_id:
+                    noti_msg = (
+                        f"✅ AI-Dataset Pro ประมวลผลเสร็จสิ้น!\n"
+                        f"👤 ผู้ใช้งาน: {st.session_state['username']}\n"
+                        f"📸 สกัดรูปภาพได้: {len(dataset_records)} รูป\n"
+                        f"❌ เตะภาพเบลอทิ้ง: {skipped_blur_count} รูป\n"
+                        f"📦 ไฟล์พร้อมดาวน์โหลดแล้วครับ!"
+                    )
+                    send_telegram_notify(tele_token, tele_chat_id, noti_msg)
+
+                train_c      = sum(1 for r in dataset_records if r['subset'] == 'train')
+                val_c        = len(dataset_records) - train_c
                 total_labels = sum(class_counts.values())
 
                 st.markdown(f"""
@@ -469,13 +618,17 @@ def show_main_app():
                             zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), output_folder))
                 with open(zip_filename, "rb") as fp:
                     st.download_button("⬇  DOWNLOAD DATASET (PRO)", fp, "ai_dataset_pro.zip", "application/zip", use_container_width=True)
-                os.remove(video_path); shutil.rmtree(output_folder); os.remove(zip_filename)
+                os.remove(video_path)
+                shutil.rmtree(output_folder)
+                os.remove(zip_filename)
 
-    # ── DASHBOARD PAGE (Personalized) ────────────────────────
+    # ══════════════════════════════════════════
+    # DASHBOARD PAGE
+    # ══════════════════════════════════════════
     elif selected_menu == "Dashboard":
         title_text = "System Admin Dashboard" if is_admin else "Personal Dashboard"
-        sub_text = "Real-time global analytics & user activity" if is_admin else "Your personal AI generation statistics"
-        
+        sub_text   = "Real-time global analytics & user activity" if is_admin else "Your personal AI generation statistics"
+
         st.markdown(f"""
         <div class="page-header">
             <div class="eyebrow">MODULE / OVERVIEW</div>
@@ -490,8 +643,10 @@ def show_main_app():
             df_history  = pd.read_sql_query("SELECT * FROM historytable ORDER BY timestamp DESC", conn)
         else:
             total_users = 1
-            query = "SELECT * FROM historytable WHERE username=? ORDER BY timestamp DESC"
-            df_history = pd.read_sql_query(query, conn, params=(st.session_state['username'],))
+            df_history  = pd.read_sql_query(
+                "SELECT * FROM historytable WHERE username=? ORDER BY timestamp DESC",
+                conn, params=(st.session_state['username'],)
+            )
 
         total_runs    = len(df_history)
         total_images  = int(df_history['total_img'].sum()) if not df_history.empty else 0
