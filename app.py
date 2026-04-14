@@ -16,7 +16,7 @@ from ultralytics import YOLO
 from streamlit_option_menu import option_menu
 
 # ==========================================
-# Page Config
+# 1. Page Configuration
 # ==========================================
 st.set_page_config(
     page_title="AI-Dataset Pro",
@@ -26,7 +26,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# Database System & Notifications
+# 2. Database & Security Functions
 # ==========================================
 conn = sqlite3.connect('users.db', check_same_thread=False)
 c = conn.cursor()
@@ -50,6 +50,7 @@ def add_history(username, total_img, blur_skip):
     c.execute('INSERT INTO historytable VALUES (?,?,?,?)', (username, total_img, blur_skip, now))
     conn.commit()
 
+# ฟังก์ชันส่งแจ้งเตือนผ่าน Telegram
 def send_telegram_notify(bot_token, chat_id, message):
     if not bot_token or not chat_id: return
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -68,7 +69,7 @@ if 'reg_last_time'   not in st.session_state: st.session_state['reg_last_time'] 
 if 'just_registered' not in st.session_state: st.session_state['just_registered']  = False
 
 # ==========================================
-# Global CSS
+# 3. Global CSS (Modern Clean & Orange Theme)
 # ==========================================
 THEME_CSS = """
 <style>
@@ -98,7 +99,7 @@ THEME_CSS = """
 
 html, body, .stApp { background-color: var(--bg-deep) !important; color: var(--text-1) !important; font-family: var(--font-ui); }
 
-/* ── ซ่อน Sidebar และเครื่องมือ Streamlit ── */
+/* ซ่อน Sidebar และ Streamlit Chrome */
 [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none !important; }
 header[data-testid="stHeader"] { background-color: transparent !important; border-bottom: none !important; box-shadow: none !important; }
 [data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
@@ -190,14 +191,11 @@ video { border-radius: 12px !important; border: 1px solid var(--border) !importa
 .stMarkdown p { color: var(--text-1) !important; font-size: 15px !important; font-family: var(--font-ui) !important; font-weight: 500 !important; line-height: 1.6 !important; }
 .main .block-container { padding: 0 2rem 2rem !important; max-width: 1200px; }
 .status-text { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-2); letter-spacing: 0.5px; padding: 12px 0; }
-
-/* ── AUTH CARD ── */
-.auth-input-label { font-family: var(--font-ui); font-size: 11px; font-weight: 700; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; margin-top: 12px; }
 </style>
 """
 
 # ==========================================
-# Auth Page
+# 4. Authentication UI
 # ==========================================
 def show_auth_page():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
@@ -321,7 +319,7 @@ def show_auth_page():
                     st.warning("Please fill in all fields")
 
 # ==========================================
-# Main Application
+# 5. Main Application Logic
 # ==========================================
 def show_main_app():
     st.markdown(THEME_CSS, unsafe_allow_html=True)
@@ -445,18 +443,20 @@ def show_main_app():
                 col_t1, col_t2, col_t3 = st.columns([2, 1.5, 1])
                 with col_t1:
                     st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">🔑 Bot Token</p>', unsafe_allow_html=True)
+                    # 📌 แก้ไขค่า value="" ให้เริ่มต้นแบบว่างเปล่าทุกครั้งที่ล็อกอิน
                     tele_token = st.text_input(
                         "Bot Token",
-                        value="8345283139:AAFDKDraPZ9dVjFuEgnbr2bhugUhau-9jGA",
+                        value="", 
                         type="password",
                         placeholder="e.g. 123456789:AAFxxxxxxxxxxxxxxxxxxxxxxx",
                         label_visibility="collapsed"
                     )
                 with col_t2:
                     st.markdown('<p style="font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">💬 Chat ID</p>', unsafe_allow_html=True)
+                    # 📌 แก้ไขค่า value="" ให้เริ่มต้นแบบว่างเปล่าทุกครั้งที่ล็อกอิน
                     tele_chat_id = st.text_input(
                         "Chat ID",
-                        value="8498185564",
+                        value="",
                         placeholder="e.g. 849818556",
                         label_visibility="collapsed"
                     )
