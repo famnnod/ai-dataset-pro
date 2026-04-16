@@ -1,6 +1,7 @@
 streamlit
-pandas
 streamlit-option-menu
 ultralytics
-opencv-python-headless
+pandas
 requests
+supabase
+opencv-python-headless
