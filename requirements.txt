@@ -5,3 +5,4 @@ pandas
 requests
 supabase
 opencv-python-headless
+lapx
