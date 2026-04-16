@@ -69,10 +69,9 @@ def send_telegram_notify(bot_token, chat_id, message):
 # ==========================================
 # ── State Management & Auto-Login Persistence ──
 # ==========================================
-SESSION_SALT = "ai_dataset_pro_secret_2026" # รหัสลับสำหรับเข้ารหัส Token ไม่ให้คนแฮ็ก URL
+SESSION_SALT = "ai_dataset_pro_secret_2026" 
 
 if 'logged_in' not in st.session_state:
-    # 📌 เช็คว่ามี Token ใน URL หรือไม่ (ตอนรีเฟรชหน้าเว็บ)
     if "session_user" in st.query_params and "session_token" in st.query_params:
         url_user = st.query_params["session_user"]
         url_token = st.query_params["session_token"]
@@ -159,7 +158,6 @@ def frontend_theme_toggle():
 def get_theme_css():
     css_base = """
     :root {
-        /* ☀️ Light Theme Default */
         --bg-deep:     #f8fafc;
         --bg-surface:  #ffffff;
         --bg-raised:   #f1f5f9;
@@ -186,7 +184,6 @@ def get_theme_css():
         --r-lg:        16px;
     }
 
-    /* 🌙 Dark Theme (Active เมื่อ JS เปลี่ยน attribute) */
     :root[data-custom-theme="dark"] {
         --bg-deep:     #0f172a;
         --bg-surface:  #1e293b;
@@ -201,7 +198,6 @@ def get_theme_css():
         --menu-filter: invert(0.88) hue-rotate(180deg) contrast(1.1);
     }
     
-    /* ฟิลเตอร์สำหรับกราฟและเมนู iframe ให้เนียนไปกับโหมดมืดแบบอัตโนมัติ */
     [data-testid="stArrowVegaLiteChart"] { filter: var(--chart-filter); border-radius: 12px; }
     iframe[title="streamlit_option_menu.option_menu"] { filter: var(--menu-filter); }
 
@@ -243,7 +239,6 @@ def get_theme_css():
     .stat-pill .sp-label { font-family: var(--font-display); font-size: 11px; font-weight: 700; color: var(--text-2); letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 8px; }
     .stat-pill .sp-val { font-size: 28px; font-weight: 800; color: var(--text-1); letter-spacing: -0.5px; font-family: var(--font-display); }
 
-    /* ── CUSTOM HTML TABLE ── */
     .custom-table { width: 100%; border-collapse: collapse; font-family: var(--font-ui); font-size: 13px; color: var(--text-1); background: var(--bg-surface); border-radius: var(--r-lg); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); margin-top: 8px; transition: all 0.3s; }
     .custom-table th { background-color: var(--bg-raised); color: var(--text-2); font-family: var(--font-display); font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; padding: 14px 16px; text-align: left; border-bottom: 2px solid var(--border); transition: all 0.3s; }
     .custom-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-weight: 500; border-color: var(--border); transition: all 0.3s; }
@@ -267,49 +262,20 @@ def get_theme_css():
         transition: all 0.2s ease !important;
         box-shadow: 0 4px 6px rgba(255, 107, 0, 0.2) !important;
     }
-    [data-testid="stFormSubmitButton"] > button:hover {
-        opacity: 0.9 !important;
-        transform: translateY(-1px) !important;
-        color: #ffffff !important;
-    }
+    [data-testid="stFormSubmitButton"] > button:hover { opacity: 0.9 !important; transform: translateY(-1px) !important; color: #ffffff !important; }
 
     .stDownloadButton > button { font-family: var(--font-display) !important; font-weight: 800 !important; font-size: 14px !important; border-radius: 8px !important; background: var(--accent) !important; color: white !important; border: none !important; padding: 12px 24px !important; box-shadow: 0 4px 6px rgba(255,107,0,0.2) !important; }
     .stDownloadButton > button:hover { opacity: 0.9 !important; transform: translateY(-1px) !important; }
 
     .stTextInput > label, .stMultiselect > label, .stSlider > label, .stFileUploader > label, .stRadio > label { font-family: var(--font-ui) !important; font-size: 12px !important; font-weight: 700 !important; color: var(--text-1) !important; margin-bottom: 8px !important; transition: color 0.3s; }
     
-    div[data-testid="stCheckbox"] p,
-    div[data-testid="stRadio"] p,
-    div[data-testid="stToggle"] p,
-    div[data-testid="stFileUploaderDropzone"] span,
-    div[data-testid="stFileUploaderDropzone"] small {
-        color: var(--text-1) !important; transition: color 0.3s;
-    }
-    
-    div[data-testid="stSliderTickBarMin"], 
-    div[data-testid="stSliderTickBarMax"] {
-        color: var(--text-3) !important; transition: color 0.3s;
-    }
+    div[data-testid="stCheckbox"] p, div[data-testid="stRadio"] p, div[data-testid="stToggle"] p, div[data-testid="stFileUploaderDropzone"] span, div[data-testid="stFileUploaderDropzone"] small { color: var(--text-1) !important; transition: color 0.3s; }
+    div[data-testid="stSliderTickBarMin"], div[data-testid="stSliderTickBarMax"] { color: var(--text-3) !important; transition: color 0.3s; }
 
-    div[data-baseweb="input"] {
-        background-color: var(--bg-surface) !important;
-        border: 1px solid var(--border-hi) !important;
-        border-radius: 8px !important;
-        transition: all 0.3s !important;
-        overflow: hidden !important;
-    }
-    div[data-baseweb="input"]:focus-within {
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 3px var(--accent-dim) !important;
-    }
+    div[data-baseweb="input"] { background-color: var(--bg-surface) !important; border: 1px solid var(--border-hi) !important; border-radius: 8px !important; transition: all 0.3s !important; overflow: hidden !important; }
+    div[data-baseweb="input"]:focus-within { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-dim) !important; }
     div[data-baseweb="input"] > div { background-color: transparent !important; }
-    div[data-baseweb="input"] input {
-        color: var(--text-1) !important;
-        background-color: transparent !important;
-        font-size: 14px !important;
-        padding: 12px 16px !important;
-        transition: color 0.3s;
-    }
+    div[data-baseweb="input"] input { color: var(--text-1) !important; background-color: transparent !important; font-size: 14px !important; padding: 12px 16px !important; transition: color 0.3s; }
     div[data-baseweb="input"] input::placeholder { color: var(--text-3) !important; }
     div[data-baseweb="input"] svg { fill: var(--text-3) !important; transition: fill 0.3s; }
 
@@ -404,6 +370,7 @@ def get_theme_css():
     .land-footer-tags { display: flex; gap: 8px; }
     .land-footer-tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-3); background: var(--bg-raised); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s; }
     
+    /* ── MOBILE RESPONSIVE ── */
     @media (max-width: 768px) {
         .hero-title { font-size: 42px !important; }
         .hero-sub { font-size: 15px !important; }
@@ -413,8 +380,24 @@ def get_theme_css():
         .mock-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .mock-stat-row { flex-wrap: wrap !important; }
         .mock-stat { min-width: 40% !important; }
-        .steps-row { flex-direction: column !important; gap: 24px !important; }
+        
+        /* 📌 จัดกรอบสเต็ปการใช้งานสำหรับมือถือให้เป็น Grid 2 คอลัมน์ ไม่เปลืองพื้นที่ */
+        .steps-row {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 20px 12px !important;
+            background: var(--bg-surface) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 16px !important;
+            padding: 24px 16px !important;
+            margin-bottom: 40px !important;
+        }
+        .step-item { padding: 0 !important; }
+        /* ดันอันสุดท้าย (อันที่ 5) ให้เต็มความกว้าง */
+        .step-item:last-child { grid-column: span 2 !important; } 
+        .step-num { width: 38px !important; height: 38px !important; font-size: 13px !important; margin: 0 auto 8px !important; }
         .steps-row::before { display: none !important; }
+        
         .cta-banner { padding: 32px 24px !important; text-align: center !important; }
         .cta-banner-sub { margin: 0 auto !important; }
     }
@@ -589,7 +572,6 @@ def show_auth_page():
                             st.session_state['current_page'] = 'main'
                             st.session_state['just_registered'] = False
                             
-                            # 📌 แอบฝัง Token ไว้ใน URL ตอนล็อกอินสำเร็จ
                             st.query_params["session_user"] = login_user_input
                             st.query_params["session_token"] = hashlib.sha256((login_user_input + SESSION_SALT).encode()).hexdigest()
                             
@@ -616,7 +598,6 @@ def show_auth_page():
                             st.session_state['username']  = login_user_input
                             st.session_state['current_page'] = 'main'
                             
-                            # 📌 แอบฝัง Token ไว้ใน URL ตอนล็อกอินสำเร็จ
                             st.query_params["session_user"] = login_user_input
                             st.query_params["session_token"] = hashlib.sha256((login_user_input + SESSION_SALT).encode()).hexdigest()
                             
@@ -700,7 +681,6 @@ def show_main_app():
 
     is_admin = (st.session_state['username'].lower() == 'admin')
 
-    # เมนูถูกครอบด้วย iframe ดังนั้นจะใช้สี Light เป็นฐาน แล้วปล่อยให้ CSS Filter ของเราทำการกลับสีเองเวลาเปิดโหมดมืด
     menu_bg        = "#ffffff"
     menu_border    = "#e2e8f0"
     menu_text      = "#1e293b"
@@ -722,7 +702,6 @@ def show_main_app():
     )
 
     if selected_menu == "Logout":
-        # 📌 เคลียร์ URL ทิ้งเมื่อกด Logout
         st.query_params.clear()
         st.session_state.clear()
         st.rerun()
