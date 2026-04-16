@@ -405,29 +405,32 @@ def show_auth_page():
         </div>
         """, unsafe_allow_html=True)
 
+        # 📌 1. โหมดเด้งกลับ: ถ้าเพิ่งสมัครเสร็จ จะซ่อนแท็บทั้งหมดและโชว์หน้า Login เดี่ยวๆ
         if st.session_state.get('just_registered'):
-            tab1, tab2 = st.tabs(["LOGIN", "REGISTER"])
-            with tab1:
-                st.success("✅ Account created successfully — please log in")
-                st.session_state['just_registered'] = False
+            st.success("✅ สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ")
+            
+            with st.form("login_form_post_reg"):
+                login_user_input = st.text_input("Username", placeholder="your username")
+                login_pass_input = st.text_input("Password", type="password", placeholder="••••••••")
+                submitted = st.form_submit_button("INITIATE LOGIN", use_container_width=True)
                 
-                with st.form("login_form_post_reg"):
-                    login_user_input = st.text_input("Username", placeholder="your username")
-                    login_pass_input = st.text_input("Password", type="password", placeholder="••••••••")
-                    submitted = st.form_submit_button("INITIATE LOGIN", use_container_width=True)
-                    if submitted:
-                        if login_user_input and login_pass_input:
-                            if login_user(login_user_input, login_pass_input):
-                                st.session_state['logged_in'] = True
-                                st.session_state['username']  = login_user_input
-                                st.session_state['current_page'] = 'main'
-                                st.rerun()
-                            else: st.error("Access denied — invalid credentials")
-                        else: st.warning("Please fill in all fields")
-            with tab2:
-                st.info("Registration complete. Switch to LOGIN tab to continue.")
-            return
+                if submitted:
+                    if login_user_input and login_pass_input:
+                        if login_user(login_user_input, login_pass_input):
+                            st.session_state['logged_in'] = True
+                            st.session_state['username']  = login_user_input
+                            st.session_state['current_page'] = 'main'
+                            st.session_state['just_registered'] = False # รีเซ็ตสถานะ
+                            st.rerun()
+                        else: st.error("❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
+                    else: st.warning("⚠️ กรุณากรอกข้อมูลให้ครบถ้วน")
+            
+            if st.button("ย้อนกลับ", use_container_width=True):
+                st.session_state['just_registered'] = False
+                st.rerun()
+            return # หยุดการทำงานตรงนี้เพื่อไม่ให้เรนเดอร์แท็บด้านล่าง
 
+        # 📌 2. โหมดปกติ: โชว์แท็บ Login และ Register
         tab1, tab2 = st.tabs(["LOGIN", "REGISTER"])
         
         with tab1:
@@ -442,64 +445,54 @@ def show_auth_page():
                             st.session_state['username']  = login_user_input
                             st.session_state['current_page'] = 'main'
                             st.rerun()
-                        else: st.error("Access denied — invalid credentials")
-                    else: st.warning("Please fill in all fields")
+                        else: st.error("❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
+                    else: st.warning("⚠️ กรุณากรอกข้อมูลให้ครบถ้วน")
 
         with tab2:
-            new_user = st.text_input("New Username", key="reg_user", placeholder="choose a username")
-            new_pass = st.text_input("New Password", type="password", key="reg_pass", placeholder="••••••••")
-            
-            st.markdown('<div style="font-family:var(--font-ui);font-size:12px;color:var(--text-3);margin-top:-8px;margin-bottom:12px;font-weight:500;">💡 รหัสผ่านต้องมี 8 ตัวอักษรขึ้นไป, ประกอบด้วย A-Z, a-z, 0-9 และอักขระพิเศษ</div>', unsafe_allow_html=True)
-            
-            confirm_pass = st.text_input("Confirm Password", type="password", key="reg_confirm", placeholder="••••••••")
-            
-            is_strong = False
-            if new_pass:
-                score = sum([len(new_pass) >= 8, bool(re.search(r"[A-Z]", new_pass)), bool(re.search(r"[a-z]", new_pass)), bool(re.search(r"[0-9]", new_pass)), bool(re.search(r"[@$!%*?&_#^-]", new_pass))])
-                clr = "var(--red)" if score <= 2 else "var(--amber)" if score <= 4 else "var(--green)"
-                lbl = "WEAK"       if score <= 2 else "FAIR"         if score <= 4 else "STRONG"
-                st.markdown(f"""
-                <div style="margin-top:-10px;margin-bottom:15px;">
-                    <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10px;color:var(--text-2);margin-bottom:5px;font-weight:600;">
-                        <span>SECURITY LEVEL</span><span style="color:{clr};font-weight:800;">{lbl}</span>
-                    </div>
-                    <div style="width:100%;height:4px;background:var(--border);border-radius:2px;">
-                        <div style="width:{(score/5)*100}%;height:100%;background:{clr};border-radius:2px;transition:all 0.3s;"></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                if score == 5:
-                    is_strong = True
+            # 📌 3. ใส่ Form ให้หน้า Register เพื่อให้กด Enter จากคีย์บอร์ดได้
+            with st.form("register_form", clear_on_submit=False):
+                new_user = st.text_input("New Username", placeholder="choose a username")
+                new_pass = st.text_input("New Password", type="password", placeholder="••••••••")
+                
+                st.markdown('<div style="font-family:var(--font-ui);font-size:12px;color:var(--text-3);margin-top:-8px;margin-bottom:12px;font-weight:500;">💡 รหัสผ่านต้องมี 8 ตัวอักษรขึ้นไป, ประกอบด้วย A-Z, a-z, 0-9 และอักขระพิเศษ</div>', unsafe_allow_html=True)
+                
+                confirm_pass = st.text_input("Confirm Password", type="password", placeholder="••••••••")
+                
+                reg_submitted = st.form_submit_button("CREATE ACCOUNT", use_container_width=True)
 
-            if st.button("CREATE ACCOUNT", use_container_width=True, key="btn_register"):
+            if reg_submitted:
                 now = datetime.datetime.now()
                 elapsed = (now - st.session_state['reg_last_time']).total_seconds()
+                
                 if elapsed > 60:
                     st.session_state['reg_attempts'] = 0
                     st.session_state['reg_last_time'] = now
 
                 if st.session_state['reg_attempts'] >= 3:
                     remaining = max(0, int(60 - elapsed))
-                    st.error(f"⚠️ Too many attempts — please wait {remaining}s before trying again")
+                    st.error(f"⚠️ ใช้งานบ่อยเกินไป กรุณารอ {remaining} วินาที")
                 elif new_user and new_pass and confirm_pass:
+                    # เช็คความปลอดภัยรหัสผ่าน
+                    is_strong = sum([len(new_pass) >= 8, bool(re.search(r"[A-Z]", new_pass)), bool(re.search(r"[a-z]", new_pass)), bool(re.search(r"[0-9]", new_pass)), bool(re.search(r"[@$!%*?&_#^-]", new_pass))]) >= 5
+                    
                     if new_pass != confirm_pass:
                         st.error("❌ รหัสผ่านไม่ตรงกัน (Passwords do not match!)")
                     elif not is_strong: 
-                        st.error("❌ กรุณาตั้งรหัสผ่านให้ปลอดภัยขึ้น (STRONG level required)")
+                        st.error("❌ กรุณาตั้งรหัสผ่านให้ถูกต้องตามเงื่อนไข (STRONG level required)")
                     else:
                         # เช็คใน Supabase ว่ามี username นี้หรือยัง
                         res = supabase.table("userstable").select("username").eq("username", new_user).execute()
                         if len(res.data) > 0:
                             st.session_state['reg_attempts'] += 1
-                            st.error("Username already exists")
+                            st.error("❌ ชื่อผู้ใช้นี้มีคนใช้แล้ว (Username already exists)")
                         else:
+                            # บันทึกข้อมูลและสั่งให้เด้งกลับหน้า Login
                             add_userdata(new_user, new_pass)
                             st.session_state['reg_attempts'] += 1
-                            for k in ['reg_user', 'reg_pass', 'reg_confirm']:
-                                if k in st.session_state: del st.session_state[k]
                             st.session_state['just_registered'] = True
                             st.rerun()
-                else: st.warning("Please fill in all fields")
+                else: 
+                    st.warning("⚠️ กรุณากรอกข้อมูลให้ครบถ้วน")
 
 # ==========================================
 # 6. Main Application
