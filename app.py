@@ -370,7 +370,6 @@ def get_theme_css():
     .land-footer-tags { display: flex; gap: 8px; }
     .land-footer-tag { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text-3); background: var(--bg-raised); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s; }
     
-    /* ── MOBILE RESPONSIVE ── */
     @media (max-width: 768px) {
         .hero-title { font-size: 42px !important; }
         .hero-sub { font-size: 15px !important; }
@@ -381,7 +380,6 @@ def get_theme_css():
         .mock-stat-row { flex-wrap: wrap !important; }
         .mock-stat { min-width: 40% !important; }
         
-        /* 📌 จัดกรอบสเต็ปการใช้งานสำหรับมือถือให้เป็น Grid 2 คอลัมน์ ไม่เปลืองพื้นที่ */
         .steps-row {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
@@ -393,7 +391,6 @@ def get_theme_css():
             margin-bottom: 40px !important;
         }
         .step-item { padding: 0 !important; }
-        /* ดันอันสุดท้าย (อันที่ 5) ให้เต็มความกว้าง */
         .step-item:last-child { grid-column: span 2 !important; } 
         .step-num { width: 38px !important; height: 38px !important; font-size: 13px !important; margin: 0 auto 8px !important; }
         .steps-row::before { display: none !important; }
@@ -689,8 +686,8 @@ def show_main_app():
 
     selected_menu = option_menu(
         menu_title=None,
-        options=["Dashboard", "AI Engine", "Logout"],
-        icons=["grid-1x2", "cpu", "box-arrow-right"],
+        options=["Dashboard", "AI Engine", "Training Guide", "Logout"],
+        icons=["grid-1x2", "cpu", "book", "box-arrow-right"],
         default_index=1,
         orientation="horizontal",
         styles={
@@ -814,20 +811,21 @@ def show_main_app():
         input_mode = st.radio("รูปแบบข้อมูล (Input Mode)", ["🎥 อัปโหลดวิดีโอ (Video Processing)", "🖼️ อัปโหลดรูปภาพ (Image Batch Processing)"], horizontal=True, label_visibility="collapsed")
         st.write("") 
         
-        uploaded_file = None
+        uploaded_videos = []
         uploaded_images = []
+        start_sec, end_sec = 0.0, 0.0
         
         if input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)":
-            uploaded_file = st.file_uploader("Drop video file here", type=['mp4', 'avi', 'mov'], label_visibility="collapsed")
+            uploaded_videos = st.file_uploader("Drop video files here (อัปโหลดได้หลายคลิป)", type=['mp4', 'avi', 'mov'], accept_multiple_files=True, label_visibility="collapsed")
         else:
             uploaded_images = st.file_uploader("Drop image files or a folder here (ลากโฟลเดอร์มาวางได้เลย)", type=['jpg', 'jpeg', 'png'], accept_multiple_files=True, label_visibility="collapsed")
             st.info("💡 **เคล็ดลับ:** คุณสามารถ **คลุมดำรูปภาพหลายๆ ไฟล์** หรือคลิกที่ **โฟลเดอร์รูปภาพ** แล้วลากมาวาง (Drag & Drop) ในกล่องด้านบนได้เลยครับ!")
 
-        has_media = (input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)" and uploaded_file is not None) or \
+        has_media = (input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)" and len(uploaded_videos) > 0) or \
                     (input_mode == "🖼️ อัปโหลดรูปภาพ (Image Batch Processing)" and len(uploaded_images) > 0)
 
         if has_media:
-            current_upload_name = uploaded_file.name if input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)" else f"batch_{len(uploaded_images)}_images"
+            current_upload_name = f"batch_{len(uploaded_videos)}_videos" if input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)" else f"batch_{len(uploaded_images)}_images"
             if st.session_state.get('last_uploaded_file') != current_upload_name:
                 st.session_state['process_done'] = False
                 st.session_state['last_uploaded_file'] = current_upload_name
@@ -838,11 +836,33 @@ def show_main_app():
             with col1:
                 st.markdown('<div class="col-header"><span class="dot-status dot-blue"></span>SOURCE</div>', unsafe_allow_html=True)
                 if input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)":
-                    st.video(uploaded_file)
-                    video_bytes = uploaded_file.getvalue()
-                    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tfile:
-                        tfile.write(video_bytes)
-                        video_path = tfile.name
+                    st.info(f"🎥 พร้อมประมวลผลวิดีโอทั้งหมด: {len(uploaded_videos)} คลิป")
+                    
+                    if len(uploaded_videos) == 1:
+                        st.video(uploaded_videos[0])
+                        video_bytes = uploaded_videos[0].getvalue()
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tfile:
+                            tfile.write(video_bytes)
+                            video_path = tfile.name
+                            
+                        cap_temp = cv2.VideoCapture(video_path)
+                        fps = cap_temp.get(cv2.CAP_PROP_FPS)
+                        total_f = int(cap_temp.get(cv2.CAP_PROP_FRAME_COUNT))
+                        duration = total_f / fps if fps > 0 else 0
+                        cap_temp.release()
+
+                        st.markdown('<p style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-top:16px;margin-bottom:6px;text-transform:uppercase;">✂️ TRIM VIDEO (SELECT TIME RANGE)</p>', unsafe_allow_html=True)
+                        start_sec, end_sec = st.slider(
+                            "เลือกช่วงเวลา (วินาที)", 
+                            0.0, float(duration), 
+                            (0.0, float(duration)), 
+                            step=0.1, format="%.1f s", 
+                            label_visibility="collapsed"
+                        )
+                        st.markdown(f'<p style="font-size:12px;color:var(--accent);font-weight:600;">🕒 ระบบจะประมวลผลวิดีโอความยาว: {end_sec - start_sec:.1f} วินาที</p>', unsafe_allow_html=True)
+                    else:
+                        st.warning("⚠️ โหมดเลือกช่วงเวลา (Trim) จะใช้งานได้เมื่ออัปโหลดวิดีโอทีละ 1 คลิปเท่านั้น ระบบจะทำการประมวลผลวิดีโอทั้งหมดแบบเต็มความยาว")
+                        start_sec, end_sec = 0.0, float('inf') 
                 else:
                     st.info(f"📂 พร้อมประมวลผลไฟล์รูปภาพจำนวน: {len(uploaded_images)} รูป")
                     if len(uploaded_images) > 0:
@@ -895,78 +915,109 @@ def show_main_app():
                     dataset_records.append({"subset": subset, "file": base_name})
 
                 if input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)":
-                    cap          = cv2.VideoCapture(video_path)
-                    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-                    last_pos = {} 
+                    total_videos = len(uploaded_videos)
                     
-                    while cap.isOpened():
-                        ret, frame = cap.read()
-                        if not ret: break
+                    for vid_idx, video_file in enumerate(uploaded_videos):
+                        video_bytes = video_file.getvalue()
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tfile:
+                            tfile.write(video_bytes)
+                            video_path = tfile.name
                         
-                        process_this_frame = False
-                        boxes_to_save = None
-                        plot_annotated = None
-
-                        if intel_sample:
-                            results = model.track(frame, persist=True, classes=selected_class_ids if selected_class_ids else None, conf=conf_threshold, verbose=False)
-                            boxes = results[0].boxes
-                            if len(boxes) > 0:
-                                if boxes.id is not None:
-                                    ids = boxes.id.int().cpu().tolist()
-                                    coords = boxes.xywhn.cpu().numpy()
-                                    for obj_id, coord in zip(ids, coords):
-                                        cx, cy = coord[0], coord[1]
-                                        if obj_id not in last_pos:
-                                            process_this_frame = True
-                                        else:
-                                            last_cx, last_cy = last_pos[obj_id]
-                                            dist = np.sqrt((cx - last_cx)**2 + (cy - last_cy)**2)
-                                            if dist > move_thresh:
-                                                process_this_frame = True
-                                        
-                                        if process_this_frame:
-                                            last_pos[obj_id] = (cx, cy)
-                                    
-                                    if process_this_frame:
-                                        boxes_to_save = boxes
-                                        plot_annotated = results[0].plot()
-                                else:
-                                    process_this_frame = True
-                                    boxes_to_save = boxes
-                                    plot_annotated = results[0].plot()
+                        cap          = cv2.VideoCapture(video_path)
+                        fps          = cap.get(cv2.CAP_PROP_FPS)
+                        total_f      = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                        
+                        if total_videos == 1:
+                            start_frame = int(start_sec * fps)
+                            end_frame   = int(end_sec * fps)
                         else:
-                            if frame_count % frame_skip == 0:
-                                results = model(frame, classes=selected_class_ids if selected_class_ids else None, conf=conf_threshold, verbose=False)
+                            start_frame = 0
+                            end_frame   = total_f
+                        
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+                        
+                        total_frames_to_process = end_frame - start_frame
+                        if total_frames_to_process <= 0: total_frames_to_process = 1
+
+                        last_pos = {} 
+                        processed_count = 0
+                        
+                        while cap.isOpened():
+                            current_pos = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                            if current_pos > end_frame:
+                                break
+                                
+                            ret, frame = cap.read()
+                            if not ret: break
+                            
+                            process_this_frame = False
+                            boxes_to_save = None
+                            plot_annotated = None
+
+                            if intel_sample:
+                                results = model.track(frame, persist=True, classes=selected_class_ids if selected_class_ids else None, conf=conf_threshold, verbose=False)
                                 boxes = results[0].boxes
                                 if len(boxes) > 0:
-                                    process_this_frame = True
-                                    boxes_to_save = boxes
-                                    plot_annotated = results[0].plot()
+                                    if boxes.id is not None:
+                                        ids = boxes.id.int().cpu().tolist()
+                                        coords = boxes.xywhn.cpu().numpy()
+                                        for obj_id, coord in zip(ids, coords):
+                                            cx, cy = coord[0], coord[1]
+                                            if obj_id not in last_pos:
+                                                process_this_frame = True
+                                            else:
+                                                last_cx, last_cy = last_pos[obj_id]
+                                                dist = np.sqrt((cx - last_cx)**2 + (cy - last_cy)**2)
+                                                if dist > move_thresh:
+                                                    process_this_frame = True
+                                            
+                                            if process_this_frame:
+                                                last_pos[obj_id] = (cx, cy)
+                                        
+                                        if process_this_frame:
+                                            boxes_to_save = boxes
+                                            plot_annotated = results[0].plot()
+                                    else:
+                                        process_this_frame = True
+                                        boxes_to_save = boxes
+                                        plot_annotated = results[0].plot()
+                            else:
+                                if frame_count % frame_skip == 0:
+                                    results = model(frame, classes=selected_class_ids if selected_class_ids else None, conf=conf_threshold, verbose=False)
+                                    boxes = results[0].boxes
+                                    if len(boxes) > 0:
+                                        process_this_frame = True
+                                        boxes_to_save = boxes
+                                        plot_annotated = results[0].plot()
 
-                        if process_this_frame and boxes_to_save is not None:
-                            if do_blur_filter:
-                                gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                                score = cv2.Laplacian(gray, cv2.CV_64F).var()
-                                if score < blur_threshold:
-                                    skipped_blur_count += 1
-                                    blur_warning.markdown(f'<div style="color:var(--red);font-size:13px;font-weight:700;padding:8px;border:1px solid var(--red);border-radius:8px;background:var(--bg-surface);">⚠️ BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>', unsafe_allow_html=True)
-                                    process_this_frame = False
-                                else: blur_warning.empty()
+                            if process_this_frame and boxes_to_save is not None:
+                                if do_blur_filter:
+                                    gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                                    score = cv2.Laplacian(gray, cv2.CV_64F).var()
+                                    if score < blur_threshold:
+                                        skipped_blur_count += 1
+                                        blur_warning.markdown(f'<div style="color:var(--red);font-size:13px;font-weight:700;padding:8px;border:1px solid var(--red);border-radius:8px;background:var(--bg-surface);">⚠️ BLUR DETECTED (score:{score:.1f}) — FRAME SKIPPED</div>', unsafe_allow_html=True)
+                                        process_this_frame = False
+                                    else: blur_warning.empty()
 
-                            if process_this_frame:
-                                save_data(frame, boxes_to_save, "original")
-                                if do_flip:   save_data(cv2.flip(frame, 1), boxes_to_save, "flip", is_flipped=True)
-                                if do_bright: save_data(cv2.convertScaleAbs(frame, alpha=1.2, beta=30), boxes_to_save, "bright")
-                                if do_noise:  save_data(cv2.add(frame, np.random.randint(0, 50, frame.shape, dtype='uint8')), boxes_to_save, "noise")
-                                image_preview.image(cv2.cvtColor(plot_annotated, cv2.COLOR_BGR2RGB), use_container_width=True)
+                                if process_this_frame:
+                                    save_data(frame, boxes_to_save, "original")
+                                    if do_flip:   save_data(cv2.flip(frame, 1), boxes_to_save, "flip", is_flipped=True)
+                                    if do_bright: save_data(cv2.convertScaleAbs(frame, alpha=1.2, beta=30), boxes_to_save, "bright")
+                                    if do_noise:  save_data(cv2.add(frame, np.random.randint(0, 50, frame.shape, dtype='uint8')), boxes_to_save, "noise")
+                                    
+                                    image_preview.image(cv2.cvtColor(plot_annotated, cv2.COLOR_BGR2RGB), use_container_width=True)
 
-                        frame_count += 1
-                        progress_bar.progress(min(frame_count / total_frames, 1.0))
-                        status_text.markdown(f'<div class="status-text">PROCESSING  {frame_count} / {total_frames}  FRAMES | EXTRACTED: {len(dataset_records)}</div>', unsafe_allow_html=True)
-                    
-                    cap.release()
-                    try: os.remove(video_path)
-                    except: pass
+                            frame_count += 1
+                            processed_count += 1
+                            
+                            overall_progress = (vid_idx + (processed_count / total_frames_to_process)) / total_videos
+                            progress_bar.progress(min(overall_progress, 1.0))
+                            status_text.markdown(f'<div class="status-text">🎬 VIDEO {vid_idx+1}/{total_videos} | PROCESSING  {processed_count} / {total_frames_to_process}  FRAMES | EXTRACTED: {len(dataset_records)}</div>', unsafe_allow_html=True)
+                        
+                        cap.release()
+                        try: os.remove(video_path)
+                        except: pass
                 
                 else:
                     total_frames = len(uploaded_images)
@@ -998,6 +1049,7 @@ def show_main_app():
                                 if do_flip:   save_data(cv2.flip(frame, 1), boxes_to_save, "flip", is_flipped=True)
                                 if do_bright: save_data(cv2.convertScaleAbs(frame, alpha=1.2, beta=30), boxes_to_save, "bright")
                                 if do_noise:  save_data(cv2.add(frame, np.random.randint(0, 50, frame.shape, dtype='uint8')), boxes_to_save, "noise")
+                                
                                 image_preview.image(cv2.cvtColor(plot_annotated, cv2.COLOR_BGR2RGB), use_container_width=True)
 
                         frame_count += 1
@@ -1153,6 +1205,54 @@ def show_main_app():
                     if os.path.exists(zip_filename):
                         with open(zip_filename, "rb") as fp:
                             st.download_button("⬇  DOWNLOAD DATASET (ZIP)", fp, zip_filename, "application/zip", use_container_width=True)
+
+    # ══════════════════════════════════════════
+    elif selected_menu == "Training Guide":
+        st.markdown("""
+        <div class="page-header">
+            <div class="eyebrow">MODULE / KNOWLEDGE BASE</div>
+            <h1>YOLOv8 Training Guide</h1>
+            <div class="sub">คู่มือการนำ Dataset ที่สกัดได้ ไปสอน (Train) AI ของคุณเองบน Google Colab แบบจับมือทำ</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<div class="section-label">Step 1: เตรียมไฟล์และพื้นที่ทำงาน</div>', unsafe_allow_html=True)
+        st.info("1. ดาวน์โหลดไฟล์ ZIP Dataset จากเมนู **AI Engine**\n2. นำไฟล์ ZIP ไปอัปโหลดเก็บไว้ใน **Google Drive** ของคุณ")
+        st.markdown('<a href="https://colab.research.google.com/" target="_blank" style="text-decoration:none;"><div style="background:var(--accent);color:white;padding:12px 24px;border-radius:8px;text-align:center;font-weight:800;font-family:var(--font-display);margin:16px 0 32px;width:250px;box-shadow: 0 4px 6px rgba(255,107,0,0.2); transition: 0.2s;">🚀 เปิด Google Colab</div></a>', unsafe_allow_html=True)
+
+        st.markdown('<div class="section-label">Step 2: ติดตั้งเครื่องมือและแตกไฟล์</div>', unsafe_allow_html=True)
+        st.markdown("เปิด Google Colab สร้างสมุดโน้ตใหม่ (New Notebook) แล้วก๊อปปี้โค้ดด้านล่างนี้ไปรันในช่องแรก เพื่อเชื่อมต่อ Google Drive และลงเครื่องมือ AI")
+        st.code("""# 1. เชื่อมต่อ Google Drive
+from google.colab import drive
+drive.mount('/content/drive')
+
+# 2. ติดตั้งไลบรารี YOLOv8
+!pip install ultralytics
+
+# 3. แตกไฟล์ Dataset (เปลี่ยนชื่อไฟล์ ai_dataset.zip ให้ตรงกับของคุณ)
+!unzip "/content/drive/MyDrive/ai_dataset.zip" -d "/content/dataset"
+        """, language="python")
+
+        st.markdown('<div class="section-label" style="margin-top:32px;">Step 3: เริ่มเทรนโมเดล (Train AI)</div>', unsafe_allow_html=True)
+        st.markdown("เพิ่มช่องโค้ดใหม่ (New Code Cell) แล้วรันคำสั่งด้านล่างเพื่อเริ่มสอน AI ของคุณ")
+        st.code("""from ultralytics import YOLO
+
+# โหลดโมเดลตั้งต้น (n = nano, รันได้เร็วและเบาที่สุด)
+model = YOLO('yolov8n.pt') 
+
+# เริ่มเทรน! (สามารถปรับ epochs หรือ batch ได้ตามความเหมาะสม)
+results = model.train(
+    data='/content/dataset/data.yaml',  # ไฟล์ชี้เป้า Dataset
+    epochs=50,                          # จำนวนรอบที่ให้ AI เรียนรู้ซ้ำๆ (แนะนำ 50-100)
+    imgsz=640,                          # ขนาดรูปภาพที่ใช้เทรน
+    batch=16,                           # จำนวนรูปที่ประมวลผลต่อ 1 รอบ
+    name='my_custom_ai'                 # ชื่อโฟลเดอร์เก็บผลลัพธ์
+)
+        """, language="python")
+
+        st.markdown('<div class="section-label" style="margin-top:32px;">Step 4: นำโมเดลกลับมาใช้งาน</div>', unsafe_allow_html=True)
+        st.success("✅ เมื่อการเทรนเสร็จสมบูรณ์ โมเดลที่เก่งที่สุดของคุณจะถูกบันทึกไว้ในโฟลเดอร์ฝั่งซ้ายมือของ Colab ที่เส้นทาง:\n\n👉 `runs/detect/my_custom_ai/weights/best.pt`")
+        st.markdown("คุณสามารถดาวน์โหลดไฟล์ **`best.pt`** ไปใส่ช่อง **🧠 Neural Network Override** เพื่อใช้งานได้เลยครับ! 🎉")
 
     # ══════════════════════════════════════════
     elif selected_menu == "Dashboard":
