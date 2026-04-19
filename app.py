@@ -763,6 +763,8 @@ def show_main_app():
                 do_flip   = st.checkbox("Horizontal Flip")
                 do_bright = st.checkbox("Brightness Boost")
                 do_noise  = st.checkbox("Add Noise")
+                do_gray   = st.checkbox("Grayscale (B&W)")       # 📌 ใหม่!
+                do_cutout = st.checkbox("Random Cutout")         # 📌 ใหม่!
             with col4:
                 st.markdown('<p style="font-family:var(--font-display);font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;">QUALITY CONTROL</p>', unsafe_allow_html=True)
                 do_blur_filter = st.checkbox("Blur Filter", value=True)
@@ -889,6 +891,7 @@ def show_main_app():
                 dataset_records    = []
                 class_counts = {n: 0 for n in selected_class_names} if selected_class_names else {v: 0 for v in available_classes.values()}
 
+                # 📌 ปรับปรุงให้เก็บขนาดความกว้าง/สูง สำหรับทำ XML
                 def save_data(img, boxes, modifier, is_flipped=False):
                     subset = "train" if random.random() < (split_ratio / 100.0) else "val"
                     
@@ -912,7 +915,7 @@ def show_main_app():
                             x, y, w, h = box.xywhn[0]
                             if is_flipped: x = 1.0 - x
                             lf.write(f"{new_id} {x:.6f} {y:.6f} {w:.6f} {h:.6f}\n")
-                    dataset_records.append({"subset": subset, "file": base_name})
+                    dataset_records.append({"subset": subset, "file": base_name, "w": img.shape[1], "h": img.shape[0]})
 
                 if input_mode == "🎥 อัปโหลดวิดีโอ (Video Processing)":
                     total_videos = len(uploaded_videos)
@@ -935,7 +938,6 @@ def show_main_app():
                             end_frame   = total_f
                         
                         cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-                        
                         total_frames_to_process = end_frame - start_frame
                         if total_frames_to_process <= 0: total_frames_to_process = 1
 
@@ -1006,6 +1008,23 @@ def show_main_app():
                                     if do_bright: save_data(cv2.convertScaleAbs(frame, alpha=1.2, beta=30), boxes_to_save, "bright")
                                     if do_noise:  save_data(cv2.add(frame, np.random.randint(0, 50, frame.shape, dtype='uint8')), boxes_to_save, "noise")
                                     
+                                    # 📌 โค้ดสำหรับ Advanced Augmentation (Video)
+                                    if do_gray:
+                                        gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                                        gray_3c = cv2.cvtColor(gray_img, cv2.COLOR_GRAY2BGR)
+                                        save_data(gray_3c, boxes_to_save, "gray")
+                                        
+                                    if do_cutout:
+                                        cut_img = frame.copy()
+                                        h_img, w_img = cut_img.shape[:2]
+                                        for _ in range(random.randint(3, 7)):
+                                            bx = random.randint(0, int(w_img*0.8))
+                                            by = random.randint(0, int(h_img*0.8))
+                                            bw = random.randint(10, max(20, int(w_img*0.15)))
+                                            bh = random.randint(10, max(20, int(h_img*0.15)))
+                                            cv2.rectangle(cut_img, (bx, by), (bx+bw, by+bh), (0,0,0), -1)
+                                        save_data(cut_img, boxes_to_save, "cutout")
+
                                     image_preview.image(cv2.cvtColor(plot_annotated, cv2.COLOR_BGR2RGB), use_container_width=True)
 
                             frame_count += 1
@@ -1050,6 +1069,23 @@ def show_main_app():
                                 if do_bright: save_data(cv2.convertScaleAbs(frame, alpha=1.2, beta=30), boxes_to_save, "bright")
                                 if do_noise:  save_data(cv2.add(frame, np.random.randint(0, 50, frame.shape, dtype='uint8')), boxes_to_save, "noise")
                                 
+                                # 📌 โค้ดสำหรับ Advanced Augmentation (Image)
+                                if do_gray:
+                                    gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                                    gray_3c = cv2.cvtColor(gray_img, cv2.COLOR_GRAY2BGR)
+                                    save_data(gray_3c, boxes_to_save, "gray")
+                                    
+                                if do_cutout:
+                                    cut_img = frame.copy()
+                                    h_img, w_img = cut_img.shape[:2]
+                                    for _ in range(random.randint(3, 7)):
+                                        bx = random.randint(0, int(w_img*0.8))
+                                        by = random.randint(0, int(h_img*0.8))
+                                        bw = random.randint(10, max(20, int(w_img*0.15)))
+                                        bh = random.randint(10, max(20, int(h_img*0.15)))
+                                        cv2.rectangle(cut_img, (bx, by), (bx+bw, by+bh), (0,0,0), -1)
+                                    save_data(cut_img, boxes_to_save, "cutout")
+
                                 image_preview.image(cv2.cvtColor(plot_annotated, cv2.COLOR_BGR2RGB), use_container_width=True)
 
                         frame_count += 1
@@ -1199,12 +1235,71 @@ def show_main_app():
                                 st.markdown(f"- **{c}**: {v} ตัว")
 
                     st.divider()
-                    st.success("🎉 Dataset พร้อมนำไปเทรนแล้ว!")
-
+                    
+                    # 📌 2. เพิ่ม UI ให้เลือกรูปแบบไฟล์ก่อน Export (Multi-Format Export)
+                    st.markdown('<div class="section-label" style="color:var(--accent);">📦 Export Options (รูปแบบไฟล์ Dataset)</div>', unsafe_allow_html=True)
+                    export_format = st.radio("เลือกรูปแบบข้อมูลที่ต้องการดาวน์โหลด:", ["YOLOv8 (.txt) - สำหรับ YOLO Framework", "Pascal VOC (.xml) - สำหรับโมเดลและโปรแกรม AI อื่นๆ"], horizontal=True, label_visibility="collapsed")
+                    
                     zip_filename = f"ai_dataset_{st.session_state['username']}.zip"
+                    
+                    with st.spinner(f"⏳ กำลังประมวลผลและแพ็กไฟล์เป็นรูปแบบ {export_format.split(' ')[0]} กรุณารอ..."):
+                        if "YOLOv8" in export_format:
+                            if os.path.exists(user_workspace):
+                                with zipfile.ZipFile(zip_filename, 'w') as zipf:
+                                    for root, dirs, files in os.walk(user_workspace):
+                                        for file in files: 
+                                            zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), user_workspace))
+                        else: # ระบบแปลงเป็น Pascal VOC
+                            voc_workspace = f"{user_workspace}_voc"
+                            if os.path.exists(voc_workspace): shutil.rmtree(voc_workspace)
+                            os.makedirs(f"{voc_workspace}/JPEGImages")
+                            os.makedirs(f"{voc_workspace}/Annotations")
+                            
+                            classes_for_yaml = selected_class_names if selected_class_names else list(available_classes.values())
+                            
+                            for r in dataset_records:
+                                img_src = f"{user_workspace}/images/{r['subset']}/{r['file']}.jpg"
+                                txt_src = f"{user_workspace}/labels/{r['subset']}/{r['file']}.txt"
+                                if os.path.exists(img_src) and os.path.exists(txt_src):
+                                    shutil.copy(img_src, f"{voc_workspace}/JPEGImages/{r['file']}.jpg")
+                                    
+                                    width, height = r.get('w', 640), r.get('h', 640)
+                                    xml_content = f"<annotation>\n  <folder>JPEGImages</folder>\n  <filename>{r['file']}.jpg</filename>\n  <size>\n    <width>{width}</width>\n    <height>{height}</height>\n    <depth>3</depth>\n  </size>\n"
+                                    
+                                    with open(txt_src, 'r') as f:
+                                        for line in f:
+                                            if not line.strip(): continue
+                                            parts = line.strip().split()
+                                            cid = int(parts[0])
+                                            x_c, y_c, w_n, h_n = map(float, parts[1:5])
+                                            cname = classes_for_yaml[cid] if cid < len(classes_for_yaml) else str(cid)
+                                            
+                                            xmin = int((x_c - w_n/2) * width)
+                                            ymin = int((y_c - h_n/2) * height)
+                                            xmax = int((x_c + w_n/2) * width)
+                                            ymax = int((y_c + h_n/2) * height)
+                                            
+                                            xml_content += f"  <object>\n    <name>{cname}</name>\n    <bndbox>\n      <xmin>{max(0, xmin)}</xmin>\n      <ymin>{max(0, ymin)}</ymin>\n      <xmax>{min(width, xmax)}</xmax>\n      <ymax>{min(height, ymax)}</ymax>\n    </bndbox>\n  </object>\n"
+                                    xml_content += "</annotation>"
+                                    
+                                    with open(f"{voc_workspace}/Annotations/{r['file']}.xml", 'w', encoding='utf-8') as f:
+                                        f.write(xml_content)
+                                        
+                            with zipfile.ZipFile(zip_filename, 'w') as zipf:
+                                for root, dirs, files in os.walk(voc_workspace):
+                                    for file in files: 
+                                        zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), voc_workspace))
+
+                    st.success("🎉 Dataset พร้อมนำไปเทรนแล้ว!")
                     if os.path.exists(zip_filename):
                         with open(zip_filename, "rb") as fp:
-                            st.download_button("⬇  DOWNLOAD DATASET (ZIP)", fp, zip_filename, "application/zip", use_container_width=True)
+                            st.download_button(
+                                label="⬇  DOWNLOAD DATASET (ZIP)", 
+                                data=fp, 
+                                file_name=zip_filename, 
+                                mime="application/zip", 
+                                use_container_width=True
+                            )
 
     # ══════════════════════════════════════════
     elif selected_menu == "Training Guide":
